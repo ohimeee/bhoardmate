@@ -63,6 +63,9 @@ class HomeScreen extends StatelessWidget {
                 mainAxisSpacing: 12,
                 children: buttons.entries.map((entry) {
                   return Card(
+                    color: entry.key == 'Concerns'
+                        ? const Color.fromARGB(255, 199, 126, 126)
+                        : null,
                     elevation: 3,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
