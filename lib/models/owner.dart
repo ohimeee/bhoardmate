@@ -1,34 +1,25 @@
 class Owner {
-  final int id;
+  final String id;
   final String name;
-  final String username;
-  final String password;
+  final String email;
   final String contactNumber;
 
   const Owner({
     required this.id,
     required this.name,
-    required this.username,
-    required this.password,
+    required this.email,
     required this.contactNumber,
   });
 
   Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'username': username,
-      'password': password,
-      'contactNumber': contactNumber,
-    };
+    return {'name': name, 'email': email, 'contactNumber': contactNumber};
   }
 
-  factory Owner.fromMap(Map<String, dynamic> map) {
+  factory Owner.fromMap(String id, Map<String, dynamic> map) {
     return Owner(
-      id: map['id'] as int,
+      id: id,
       name: map['name'] as String,
-      username: map['username'] as String,
-      password: map['password'] as String,
+      email: map['email'] as String,
       contactNumber: map['contactNumber'] as String,
     );
   }

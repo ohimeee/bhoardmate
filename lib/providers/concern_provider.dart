@@ -6,14 +6,14 @@ import '../models/concern.dart';
 class ConcernProvider extends ChangeNotifier {
   final List<Concern> _all = [
     const Concern(
-      id: 1,
+      id: 'c1',
       roomId: 'BH01-RM2',
       title: 'Leaking faucet',
       description: 'The bathroom faucet keeps dripping even when closed.',
       createdAt: '2026-10-04T08:20:00.000',
     ),
     const Concern(
-      id: 2,
+      id: 'c2',
       roomId: 'BH01-RM1',
       title: 'Broken hallway light',
       description: 'The light near the stairs does not turn on anymore.',
@@ -21,7 +21,7 @@ class ConcernProvider extends ChangeNotifier {
       createdAt: '2026-10-01T19:45:00.000',
     ),
     const Concern(
-      id: 3,
+      id: 'c3',
       roomId: 'BH01-RM3',
       title: 'Clogged sink',
       description: 'Water drains very slowly in the kitchen sink.',
@@ -38,12 +38,9 @@ class ConcernProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  int _nextId() {
-    int max = 0;
-    for (final c in _all) {
-      if (c.id != null && c.id! > max) max = c.id!;
-    }
-    return max + 1;
+  // temporary id until Firestore gives a real one
+  String _nextId() {
+    return DateTime.now().millisecondsSinceEpoch.toString();
   }
 
   void _refresh() {
@@ -64,7 +61,7 @@ class ConcernProvider extends ChangeNotifier {
     _refresh();
   }
 
-  Future<void> toggleStatus(int id) async {
+  Future<void> toggleStatus(String id) async {
     final index = _all.indexWhere((c) => c.id == id);
     if (index == -1) return;
     final c = _all[index];
@@ -74,7 +71,7 @@ class ConcernProvider extends ChangeNotifier {
     _refresh();
   }
 
-  Future<void> deleteConcern(int id) async {
+  Future<void> deleteConcern(String id) async {
     _all.removeWhere((c) => c.id == id);
     _refresh();
   }

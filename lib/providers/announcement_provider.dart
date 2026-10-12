@@ -6,7 +6,7 @@ import '../models/announcement.dart';
 class AnnouncementProvider extends ChangeNotifier {
   final List<Announcement> _all = [
     const Announcement(
-      id: 1,
+      id: 'a1',
       title: 'Water interruption',
       message:
           'No water on October 12 from 8 AM to 3 PM because of pipe repairs. Please store water ahead.',
@@ -14,14 +14,14 @@ class AnnouncementProvider extends ChangeNotifier {
       createdAt: '2026-10-03T09:00:00.000',
     ),
     const Announcement(
-      id: 2,
+      id: 'a2',
       title: 'Electricity rate increase',
       message:
           'The electricity rate goes up to 12 pesos per kWh this month. Please use appliances wisely.',
       createdAt: '2026-10-05T14:30:00.000',
     ),
     const Announcement(
-      id: 3,
+      id: 'a3',
       title: 'Pest control',
       message:
           'Pest control for all rooms on October 20. Please keep food covered and be available that day.',
@@ -38,12 +38,9 @@ class AnnouncementProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  int _nextId() {
-    int max = 0;
-    for (final a in _all) {
-      if (a.id != null && a.id! > max) max = a.id!;
-    }
-    return max + 1;
+  // temporary id until Firestore gives a real one
+  String _nextId() {
+    return DateTime.now().millisecondsSinceEpoch.toString();
   }
 
   // newest first
@@ -82,7 +79,7 @@ class AnnouncementProvider extends ChangeNotifier {
     _refresh();
   }
 
-  Future<void> deleteAnnouncement(int id) async {
+  Future<void> deleteAnnouncement(String id) async {
     _all.removeWhere((a) => a.id == id);
     _refresh();
   }
