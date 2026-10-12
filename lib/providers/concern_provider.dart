@@ -39,8 +39,12 @@ class ConcernProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   // temporary id until Firestore gives a real one
+  // counter so two quick adds never get the same id
+  int _lastId = 3;
+
   String _nextId() {
-    return DateTime.now().millisecondsSinceEpoch.toString();
+    _lastId++;
+    return 'c$_lastId';
   }
 
   void _refresh() {
