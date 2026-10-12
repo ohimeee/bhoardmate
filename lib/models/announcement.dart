@@ -1,5 +1,5 @@
 class Announcement {
-  final int? id;
+  final String? id;
   final String title;
   final String message;
   final String? eventDate;
@@ -15,7 +15,6 @@ class Announcement {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'title': title,
       'message': message,
       'eventDate': eventDate,
@@ -23,9 +22,9 @@ class Announcement {
     };
   }
 
-  factory Announcement.fromMap(Map<String, dynamic> map) {
+  factory Announcement.fromMap(String id, Map<String, dynamic> map) {
     return Announcement(
-      id: map['id'] as int?,
+      id: id,
       title: map['title'] as String,
       message: map['message'] as String,
       eventDate: map['eventDate'] as String?,

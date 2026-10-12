@@ -21,7 +21,6 @@ class Room {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'accessCode': accessCode,
       'monthlyRent': monthlyRent,
       'boarderName': boarderName,
@@ -32,9 +31,9 @@ class Room {
     };
   }
 
-  factory Room.fromMap(Map<String, dynamic> map) {
+  factory Room.fromMap(String id, Map<String, dynamic> map) {
     return Room(
-      id: map['id'] as String,
+      id: id,
       accessCode: map['accessCode'] as String,
       monthlyRent: (map['monthlyRent'] as num).toDouble(),
       boarderName: map['boarderName'] as String?,

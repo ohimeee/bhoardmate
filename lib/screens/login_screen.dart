@@ -43,7 +43,7 @@ class LoginScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: () async {
                   final ok = await context.read<AuthProvider>().loginOwner(
-                    'owner',
+                    'owner@bhoardmate.app',
                     'admin123',
                   );
                   if (ok && context.mounted) _goToMain(context);

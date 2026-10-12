@@ -6,12 +6,14 @@ import '../models/room.dart';
 // sample data for now, DatabaseService comes in #3
 class AuthProvider extends ChangeNotifier {
   final Owner _owner = const Owner(
-    id: 1,
+    id: 'owner1',
     name: 'Mrs. Estoesta',
-    username: 'owner',
-    password: 'admin123',
+    email: 'owner@bhoardmate.app',
     contactNumber: '0917 123 4567',
   );
+
+  // temporary until Firebase Auth (#5)
+  final String _samplePassword = 'admin123';
 
   List<Room> _rooms = [
     const Room(
@@ -82,9 +84,9 @@ class AuthProvider extends ChangeNotifier {
     return true;
   }
 
-  Future<bool> loginOwner(String username, String password) async {
-    if (username.trim() != _owner.username || password != _owner.password) {
-      _errorMessage = 'Wrong username or password';
+  Future<bool> loginOwner(String email, String password) async {
+    if (email.trim() != _owner.email || password != _samplePassword) {
+      _errorMessage = 'Wrong email or password';
       notifyListeners();
       return false;
     }
