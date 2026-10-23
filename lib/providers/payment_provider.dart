@@ -6,7 +6,7 @@ import '../models/payment.dart';
 class PaymentProvider extends ChangeNotifier {
   final List<Payment> _all = [
     const Payment(
-      id: 1,
+      id: 'p1',
       roomId: 'BH01-RM1',
       month: '2026-10',
       roomRent: 2500,
@@ -17,7 +17,7 @@ class PaymentProvider extends ChangeNotifier {
       paidDate: '2026-10-05',
     ),
     const Payment(
-      id: 2,
+      id: 'p2',
       roomId: 'BH01-RM2',
       month: '2026-10',
       roomRent: 2500,
@@ -26,7 +26,7 @@ class PaymentProvider extends ChangeNotifier {
       dueDate: '2026-10-10',
     ),
     const Payment(
-      id: 3,
+      id: 'p3',
       roomId: 'BH01-RM3',
       month: '2026-10',
       roomRent: 2500,
@@ -35,7 +35,7 @@ class PaymentProvider extends ChangeNotifier {
       dueDate: '2026-10-10',
     ),
     const Payment(
-      id: 4,
+      id: 'p4',
       roomId: 'BH01-RM2',
       month: '2026-09',
       roomRent: 2500,
@@ -65,12 +65,13 @@ class PaymentProvider extends ChangeNotifier {
     return sum;
   }
 
-  int _nextId() {
-    int max = 0;
-    for (final p in _all) {
-      if (p.id != null && p.id! > max) max = p.id!;
-    }
-    return max + 1;
+  // temporary id until Firestore gives a real one
+  // counter so two quick adds never get the same id
+  int _lastId = 4;
+
+  String _nextId() {
+    _lastId++;
+    return 'p$_lastId';
   }
 
   void _refresh() {
@@ -102,7 +103,7 @@ class PaymentProvider extends ChangeNotifier {
     _refresh();
   }
 
-  Future<void> togglePaid(int id) async {
+  Future<void> togglePaid(String id) async {
     final index = _all.indexWhere((p) => p.id == id);
     if (index == -1) return;
     final p = _all[index];
@@ -113,7 +114,7 @@ class PaymentProvider extends ChangeNotifier {
     _refresh();
   }
 
-  Future<void> deletePayment(int id) async {
+  Future<void> deletePayment(String id) async {
     _all.removeWhere((p) => p.id == id);
     _refresh();
   }

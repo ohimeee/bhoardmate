@@ -50,7 +50,7 @@ void main() {
 
   testWidgets('owner toggles status and confirms deletion', (tester) async {
     final auth = AuthProvider();
-    await auth.loginOwner('owner', 'admin123');
+    await auth.loginOwner('owner@bhoardmate.app', 'admin123');
     await openScreen(tester, auth);
     expect(find.text('Report a concern'), findsNothing);
     expect(find.byType(Checkbox), findsNWidgets(3));

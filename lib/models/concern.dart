@@ -1,5 +1,5 @@
 class Concern {
-  final int? id;
+  final String? id;
   final String roomId;
   final String title;
   final String description;
@@ -17,7 +17,6 @@ class Concern {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'roomId': roomId,
       'title': title,
       'description': description,
@@ -26,9 +25,9 @@ class Concern {
     };
   }
 
-  factory Concern.fromMap(Map<String, dynamic> map) {
+  factory Concern.fromMap(String id, Map<String, dynamic> map) {
     return Concern(
-      id: map['id'] as int?,
+      id: id,
       roomId: map['roomId'] as String,
       title: map['title'] as String,
       description: map['description'] as String,
@@ -37,7 +36,7 @@ class Concern {
     );
   }
 
-  Concern copyWith({int? id, String? status}) {
+  Concern copyWith({String? id, String? status}) {
     return Concern(
       id: id ?? this.id,
       roomId: roomId,
