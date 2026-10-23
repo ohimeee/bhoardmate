@@ -25,7 +25,7 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(),
     PaymentsScreen(),
     AnnouncementsScreen(),
-    MembersScreen(),
+    MembersScreen(showOwnProfile: true),
   ];
 
   @override
