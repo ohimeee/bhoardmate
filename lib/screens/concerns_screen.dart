@@ -165,8 +165,8 @@ class _ConcernsScreenState extends State<ConcernsScreen> {
           auth.isLoggedIn && !auth.isOwner && auth.currentRoomId != null
           ? FloatingActionButton.extended(
               onPressed: loading || _busy || error != null ? null : _report,
-              backgroundColor: const Color(0xFF2E6B4F),
-              foregroundColor: Colors.white,
+              backgroundColor: const Color(0xFFFADCDC),
+              foregroundColor: Colors.black87,
               icon: const Icon(Icons.add),
               label: const Text('Report a concern'),
             )
