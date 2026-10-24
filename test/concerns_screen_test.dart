@@ -12,7 +12,9 @@ Future<void> openScreen(WidgetTester tester, AuthProvider auth) async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: auth),
-        ChangeNotifierProvider(create: (_) => ConcernProvider()),
+        ChangeNotifierProvider(
+          create: (_) => ConcernProvider(db: FakeDatabaseService()),
+        ),
       ],
       child: const MaterialApp(home: ConcernsScreen()),
     ),
@@ -63,12 +65,14 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
-    expect(find.text('Leaking faucet'), findsOneWidget);
+    // newest first, so the first card is the newest concern
+    expect(find.text('Clogged sink'), findsOneWidget);
     await tester.tap(find.byTooltip('Remove concern').first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Remove'));
     await tester.pumpAndSettle();
-    expect(find.text('Leaking faucet'), findsNothing);
+    expect(find.text('Clogged sink'), findsNothing);
+    expect(find.text('Leaking faucet'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

@@ -19,7 +19,9 @@ Future<void> openLogin(WidgetTester tester, AuthProvider auth) async {
         ChangeNotifierProvider(
           create: (_) => AnnouncementProvider(db: FakeDatabaseService()),
         ),
-        ChangeNotifierProvider(create: (_) => ConcernProvider()),
+        ChangeNotifierProvider(
+          create: (_) => ConcernProvider(db: FakeDatabaseService()),
+        ),
         ChangeNotifierProvider(create: (_) => HolidayProvider()),
       ],
       child: const MaterialApp(home: LoginScreen()),

@@ -1,82 +1,109 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../models/concern.dart';
+import '../services/database_service.dart';
 
-// sample data for now, DatabaseService comes in #3
+// boarder concerns from Firestore, newest first
 class ConcernProvider extends ChangeNotifier {
-  final List<Concern> _all = [
-    const Concern(
-      id: 'c1',
-      roomId: 'BH01-RM2',
-      title: 'Leaking faucet',
-      description: 'The bathroom faucet keeps dripping even when closed.',
-      createdAt: '2026-10-04T08:20:00.000',
-    ),
-    const Concern(
-      id: 'c2',
-      roomId: 'BH01-RM1',
-      title: 'Broken hallway light',
-      description: 'The light near the stairs does not turn on anymore.',
-      status: 'done',
-      createdAt: '2026-10-01T19:45:00.000',
-    ),
-    const Concern(
-      id: 'c3',
-      roomId: 'BH01-RM3',
-      title: 'Clogged sink',
-      description: 'Water drains very slowly in the kitchen sink.',
-      createdAt: '2026-10-06T07:10:00.000',
-    ),
-  ];
+  final DatabaseService _db;
 
-  String? _roomId;
+  // the tests pass a fake service so they don't need Firebase
+  ConcernProvider({DatabaseService? db}) : _db = db ?? DatabaseService();
+
   List<Concern> _concerns = [];
-  final bool _isLoading = false;
+  bool _isLoading = false;
   String? _errorMessage;
+  StreamSubscription<List<Concern>>? _sub;
 
   List<Concern> get concerns => _concerns;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  // temporary id until Firestore gives a real one
-  // counter so two quick adds never get the same id
-  int _lastId = 3;
-
-  String _nextId() {
-    _lastId++;
-    return 'c$_lastId';
-  }
-
-  void _refresh() {
-    _concerns = _all
-        .where((c) => _roomId == null || c.roomId == _roomId)
-        .toList();
+  // newest first, sorted here because Firestore would need an
+  // extra index to sort and filter by roomId in one query
+  void _setConcerns(List<Concern> list) {
+    _concerns = list..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     notifyListeners();
   }
 
+  // owner: roomId null = every room.
+  // boarder: only their room, the rules reject anything else
   Future<void> loadConcerns({String? roomId}) async {
-    _roomId = roomId;
+    _isLoading = true;
     _errorMessage = null;
-    _refresh();
+    notifyListeners();
+    try {
+      _setConcerns(await _db.getConcerns(roomId: roomId));
+      _sub?.cancel();
+      _sub = _db
+          .concernsStream(roomId: roomId)
+          .listen(
+            _setConcerns,
+            onError: (e) {
+              _errorMessage = 'Could not load concerns. Please try again.';
+              notifyListeners();
+            },
+          );
+    } catch (e) {
+      _errorMessage = 'Could not load concerns. Please try again.';
+    }
+    _isLoading = false;
+    notifyListeners();
   }
 
+  // the stream updates the list, these only write to Firestore
   Future<void> addConcern(Concern concern) async {
-    _all.add(concern.copyWith(id: _nextId()));
-    _refresh();
+    try {
+      await _db.insertConcern(concern);
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Could not report the concern. Please try again.';
+    }
+    notifyListeners();
   }
 
+  // owner only: pending <-> done
   Future<void> toggleStatus(String id) async {
-    final index = _all.indexWhere((c) => c.id == id);
-    if (index == -1) return;
-    final c = _all[index];
-    _all[index] = c.copyWith(
-      status: c.status == 'pending' ? 'done' : 'pending',
-    );
-    _refresh();
+    final matches = _concerns.where((c) => c.id == id);
+    if (matches.isEmpty) return;
+    final concern = matches.first;
+    try {
+      await _db.updateConcern(
+        concern.copyWith(
+          status: concern.status == 'pending' ? 'done' : 'pending',
+        ),
+      );
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Could not save the change. Please try again.';
+    }
+    notifyListeners();
   }
 
   Future<void> deleteConcern(String id) async {
-    _all.removeWhere((c) => c.id == id);
-    _refresh();
+    try {
+      await _db.deleteConcern(id);
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Could not remove the concern. Please try again.';
+    }
+    notifyListeners();
+  }
+
+  // logout: stop listening and forget the old user's data
+  void clear() {
+    _sub?.cancel();
+    _sub = null;
+    _concerns = [];
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 }
