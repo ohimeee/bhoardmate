@@ -61,6 +61,8 @@ class _MainScreenState extends State<MainScreen> {
       _leaving = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
+        // forget the old user's data before the next login
+        context.read<AnnouncementProvider>().clear();
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
