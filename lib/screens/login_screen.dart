@@ -75,6 +75,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _switchMode() {
+    // the old error belongs to the other form
+    context.read<AuthProvider>().clearError();
     setState(() {
       _ownerMode = !_ownerMode;
       _formKey.currentState?.reset();
