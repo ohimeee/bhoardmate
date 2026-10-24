@@ -88,6 +88,12 @@ class AuthProvider extends ChangeNotifier {
     return true;
   }
 
+  // login screen: hide the old error when switching boarder/owner form
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   Future<bool> loginOwner(String email, String password) async {
     try {
       await _db.signInOwner(email.trim(), password);

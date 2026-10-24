@@ -51,6 +51,19 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Wrong room ID or access code'), findsOneWidget);
     expect(find.text('Log in'), findsOneWidget);
+    // switching to the owner form hides the boarder error
+    await tester.tap(find.text('Owner? Log in as admin'));
+    await tester.pumpAndSettle();
+    expect(find.text('Wrong room ID or access code'), findsNothing);
+  });
+
+  testWidgets('boarder form logs in and opens Home', (tester) async {
+    await openLogin(tester, AuthProvider(db: FakeDatabaseService()));
+    await tester.enterText(find.byType(TextFormField).at(0), 'bh01-rm2');
+    await tester.enterText(find.byType(TextFormField).at(1), '2222');
+    await tester.tap(find.text('Log in'));
+    await tester.pumpAndSettle();
+    expect(find.text('Logged in as: BH01-RM2'), findsOneWidget);
   });
 
   testWidgets('owner switch logs in and opens Home', (tester) async {
@@ -67,6 +80,10 @@ void main() {
       find.byType(TextFormField).at(0),
       'owner@bhoardmate.app',
     );
+    await tester.enterText(find.byType(TextFormField).at(1), 'wrong');
+    await tester.tap(find.text('Log in'));
+    await tester.pumpAndSettle();
+    expect(find.text('Wrong email or password'), findsOneWidget);
     await tester.enterText(find.byType(TextFormField).at(1), 'admin123');
     await tester.tap(find.text('Log in'));
     await tester.pumpAndSettle();
