@@ -1,14 +1,450 @@
-// TODO(Bryan): build in #13
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class RoomsScreen extends StatelessWidget {
+import '../models/room.dart';
+import '../providers/auth_provider.dart';
+
+class RoomsScreen extends StatefulWidget {
   const RoomsScreen({super.key});
+  @override
+  State<RoomsScreen> createState() => _RoomsScreenState();
+}
+
+class _RoomsScreenState extends State<RoomsScreen> {
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _load();
+    });
+  }
+
+  Future<void> _load() async {
+    final auth = context.read<AuthProvider>();
+    if (!auth.isLoggedIn || !auth.isOwner) {
+      setState(() => _loading = false);
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await auth.loadRooms();
+      if (!mounted) return;
+      setState(() => _error = auth.errorMessage);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _error = 'Could not load rooms. Please try again.');
+    }
+    if (!mounted) return;
+    setState(() => _loading = false);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final allowed = auth.isLoggedIn && auth.isOwner;
     return Scaffold(
-      appBar: AppBar(title: const Text('Rooms')),
-      body: const Center(child: Text('Coming soon')),
+      backgroundColor: const Color(0xFFFAF6EE),
+      appBar: AppBar(
+        title: const Text('Rooms'),
+        backgroundColor: const Color(0xFFE7E2F8),
+      ),
+      floatingActionButton: allowed
+          ? FloatingActionButton.extended(
+              heroTag: 'rooms-add-room',
+              backgroundColor: const Color(0xFFE7E2F8),
+              foregroundColor: Colors.black,
+              onPressed: _loading || _error != null
+                  ? null
+                  : () => showDialog<void>(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (_) => const _RoomDialog(),
+                    ),
+              icon: const Icon(Icons.add),
+              label: const Text('Add room'),
+            )
+          : null,
+      body: !allowed
+          ? const Center(child: Text('Only the owner can manage rooms.'))
+          : _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_error!, textAlign: TextAlign.center),
+                    TextButton(onPressed: _load, child: const Text('Retry')),
+                  ],
+                ),
+              ),
+            )
+          : auth.rooms.isEmpty
+          ? const Center(
+              child: Text('No rooms yet. Add a room to get started.'),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+              itemCount: auth.rooms.length,
+              itemBuilder: (context, index) {
+                final room = auth.rooms[index];
+                return Card(
+                  color: Colors.white,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          room.id,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          room.boarderName?.trim().isNotEmpty == true
+                              ? room.boarderName!
+                              : 'Vacant room',
+                        ),
+                        Text('Code: ${room.accessCode}'),
+                        Text(
+                          'Monthly rent: \u20B1 ${room.monthlyRent.toStringAsFixed(2)}',
+                        ),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.black,
+                              side: const BorderSide(color: Colors.black),
+                            ),
+                            onPressed: () => showDialog<void>(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (_) =>
+                                  _RoomDialog(room: room, editRent: true),
+                            ),
+                            child: const Text('Edit rent'),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.black,
+                              side: const BorderSide(color: Colors.black),
+                            ),
+                            onPressed: () => showDialog<void>(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (_) => _RoomDialog(room: room),
+                            ),
+                            child: const Text('Reset code'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
+
+class _RoomDialog extends StatefulWidget {
+  final Room? room;
+  final bool editRent;
+  const _RoomDialog({this.room, this.editRent = false});
+  @override
+  State<_RoomDialog> createState() => _RoomDialogState();
+}
+
+class _RoomDialogState extends State<_RoomDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _id;
+  late final TextEditingController _code;
+  late final TextEditingController _rent;
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _id = TextEditingController();
+    _code = TextEditingController();
+    _rent = TextEditingController(
+      text: widget.editRent ? widget.room!.monthlyRent.toString() : '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _id.dispose();
+    _code.dispose();
+    _rent.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (_saving || !_formKey.currentState!.validate()) return;
+    final auth = context.read<AuthProvider>();
+    if (!auth.isLoggedIn || !auth.isOwner) {
+      setState(() => _error = 'Please log in as the owner again.');
+      return;
+    }
+    final room = widget.room;
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    if (room != null && !widget.editRent) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Reset access code?'),
+          content: Text(
+            'Reset ${room.id}? This clears the boarder name, contact, age and emergency information. The room ID and rent stay the same.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Reset'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      if (confirmed != true) {
+        setState(() => _saving = false);
+        return;
+      }
+    }
+    if (!auth.isLoggedIn || !auth.isOwner) {
+      setState(() {
+        _saving = false;
+        _error = 'Please log in as the owner again.';
+      });
+      return;
+    }
+    try {
+      if (room == null) {
+        await auth.addRoom(
+          Room(
+            id: _id.text.trim().toUpperCase(),
+            accessCode: _code.text.trim(),
+            monthlyRent: double.parse(_rent.text.trim()),
+          ),
+        );
+        if (!mounted) return;
+        if (auth.errorMessage != null) {
+          setState(() {
+            _saving = false;
+            _error = auth.errorMessage;
+          });
+          return;
+        }
+      } else if (widget.editRent) {
+        final matches = auth.rooms.where((item) => item.id == room.id);
+        if (matches.isEmpty) throw StateError('Room no longer exists');
+        final current = matches.first;
+        final rent = double.parse(_rent.text.trim());
+        await auth.updateRoom(
+          Room(
+            id: current.id,
+            accessCode: current.accessCode,
+            monthlyRent: rent,
+            boarderName: current.boarderName,
+            contactNumber: current.contactNumber,
+            age: current.age,
+            emergencyContactName: current.emergencyContactName,
+            emergencyContactNumber: current.emergencyContactNumber,
+          ),
+        );
+        if (!mounted) return;
+        final updated = auth.rooms.where((item) => item.id == room.id);
+        if (updated.isEmpty || updated.first.monthlyRent != rent) {
+          throw StateError('Rent update did not complete');
+        }
+      } else {
+        final matches = auth.rooms.where((item) => item.id == room.id);
+        if (matches.isEmpty) throw StateError('Room no longer exists');
+        await auth.resetAccessCode(room.id, _code.text.trim());
+        if (!mounted) return;
+        // The sample provider does not clear old errors on reset.
+        final updated = auth.rooms.where((item) => item.id == room.id);
+        if (updated.isEmpty ||
+            updated.first.accessCode != _code.text.trim() ||
+            updated.first.boarderName != null ||
+            updated.first.contactNumber != null ||
+            updated.first.age != null ||
+            updated.first.emergencyContactName != null ||
+            updated.first.emergencyContactNumber != null) {
+          throw StateError('Reset did not complete');
+        }
+      }
+      setState(() => _saving = false);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              room == null
+                  ? 'Room added.'
+                  : widget.editRent
+                  ? 'Monthly rent updated.'
+                  : 'Access code reset. Boarder information cleared.',
+            ),
+          ),
+        );
+        Navigator.pop(context);
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = 'Could not save the room. Please try again.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final room = widget.room;
+    return PopScope(
+      canPop: !_saving,
+      child: AlertDialog(
+        backgroundColor: Colors.white,
+        title: Text(
+          room == null
+              ? 'Add room'
+              : widget.editRent
+              ? 'Edit rent for ${room.id}'
+              : 'Reset code for ${room.id}',
+        ),
+        content: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (room == null) ...[
+                  TextFormField(
+                    controller: _id,
+                    enabled: !_saving,
+                    decoration: const InputDecoration(labelText: 'Room ID'),
+                    textCapitalization: TextCapitalization.characters,
+                    validator: (value) {
+                      final id = value?.trim().toUpperCase() ?? '';
+                      if (!RegExp(r'^BH\d+-RM\d+$').hasMatch(id)) {
+                        return 'Use a room ID like BH01-RM5';
+                      }
+                      if (context.read<AuthProvider>().rooms.any(
+                        (item) => item.id.toUpperCase() == id,
+                      )) {
+                        return 'Room ID already exists';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                if (!widget.editRent)
+                  TextFormField(
+                    controller: _code,
+                    enabled: !_saving,
+                    decoration: InputDecoration(
+                      labelText: room == null
+                          ? 'Access code'
+                          : 'New access code',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Access code is required';
+                      }
+                      final matches = context.read<AuthProvider>().rooms.where(
+                        (item) => item.id == room?.id,
+                      );
+                      if (room != null &&
+                          matches.isNotEmpty &&
+                          value.trim() == matches.first.accessCode) {
+                        return 'Choose a different access code';
+                      }
+                      return null;
+                    },
+                  ),
+                if (room == null || widget.editRent) ...[
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _rent,
+                    enabled: !_saving,
+                    decoration: const InputDecoration(
+                      labelText: 'Monthly rent',
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    validator: (value) {
+                      final rent = double.tryParse(value?.trim() ?? '');
+                      if (rent == null || !rent.isFinite || rent <= 0) {
+                        return 'Enter a positive monthly rent';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+                if (_error != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    _error!,
+                    style: const TextStyle(color: Color(0xFFD9534F)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _saving ? null : () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF2E6B4F),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: _saving ? null : _save,
+            child: Text(
+              _saving
+                  ? 'Saving...'
+                  : room == null
+                  ? 'Add'
+                  : widget.editRent
+                  ? 'Save'
+                  : 'Continue',
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
