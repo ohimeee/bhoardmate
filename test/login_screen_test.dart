@@ -15,7 +15,9 @@ Future<void> openLogin(WidgetTester tester, AuthProvider auth) async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: auth),
-        ChangeNotifierProvider(create: (_) => PaymentProvider()),
+        ChangeNotifierProvider(
+          create: (_) => PaymentProvider(db: FakeDatabaseService()),
+        ),
         ChangeNotifierProvider(
           create: (_) => AnnouncementProvider(db: FakeDatabaseService()),
         ),
