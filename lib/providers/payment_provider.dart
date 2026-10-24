@@ -1,56 +1,24 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../models/payment.dart';
+import '../services/database_service.dart';
 
-// sample data for now, DatabaseService comes in #3
+// monthly bills from Firestore, newest month first
 class PaymentProvider extends ChangeNotifier {
-  final List<Payment> _all = [
-    const Payment(
-      id: 'p1',
-      roomId: 'BH01-RM1',
-      month: '2026-10',
-      roomRent: 2500,
-      electricity: 850,
-      water: 200,
-      dueDate: '2026-10-10',
-      isPaid: true,
-      paidDate: '2026-10-05',
-    ),
-    const Payment(
-      id: 'p2',
-      roomId: 'BH01-RM2',
-      month: '2026-10',
-      roomRent: 2500,
-      electricity: 800,
-      water: 200,
-      dueDate: '2026-10-10',
-    ),
-    const Payment(
-      id: 'p3',
-      roomId: 'BH01-RM3',
-      month: '2026-10',
-      roomRent: 2500,
-      electricity: 760,
-      water: 180,
-      dueDate: '2026-10-10',
-    ),
-    const Payment(
-      id: 'p4',
-      roomId: 'BH01-RM2',
-      month: '2026-09',
-      roomRent: 2500,
-      electricity: 780,
-      water: 200,
-      dueDate: '2026-09-10',
-      isPaid: true,
-      paidDate: '2026-09-08',
-    ),
-  ];
+  final DatabaseService _db;
 
-  String? _roomId;
+  // the tests pass a fake service so they don't need Firebase
+  PaymentProvider({DatabaseService? db}) : _db = db ?? DatabaseService();
+
   List<Payment> _payments = [];
-  final bool _isLoading = false;
+  bool _isLoading = false;
   String? _errorMessage;
+  StreamSubscription<List<Payment>>? _sub;
+  // each load gets a number; clear() or a newer load makes the old one
+  // stale so a slow answer can't bring back data after logout
+  int _loadCount = 0;
 
   List<Payment> get payments => _payments;
   bool get isLoading => _isLoading;
@@ -65,57 +33,111 @@ class PaymentProvider extends ChangeNotifier {
     return sum;
   }
 
-  // temporary id until Firestore gives a real one
-  // counter so two quick adds never get the same id
-  int _lastId = 4;
-
-  String _nextId() {
-    _lastId++;
-    return 'p$_lastId';
-  }
-
-  void _refresh() {
-    _payments = _all
-        .where((p) => _roomId == null || p.roomId == _roomId)
-        .toList();
+  // newest month first, then by room. sorted here like concerns
+  // so Firestore doesn't need an extra index
+  void _setPayments(List<Payment> list) {
+    // a good snapshot after a stream error means it works again
+    _errorMessage = null;
+    _payments = list
+      ..sort((a, b) {
+        final byMonth = b.month.compareTo(a.month);
+        if (byMonth != 0) return byMonth;
+        return a.roomId.compareTo(b.roomId);
+      });
     notifyListeners();
   }
 
+  // owner: roomId null = every room.
+  // boarder: only their room, the rules reject anything else
   Future<void> loadPayments({String? roomId}) async {
-    _roomId = roomId;
+    final load = ++_loadCount;
+    _isLoading = true;
     _errorMessage = null;
-    _refresh();
+    notifyListeners();
+    try {
+      final list = await _db.getPayments(roomId: roomId);
+      if (load != _loadCount) return;
+      _setPayments(list);
+      _sub?.cancel();
+      _sub = _db
+          .paymentsStream(roomId: roomId)
+          .listen(
+            _setPayments,
+            onError: (e) {
+              _errorMessage = 'Could not load payments. Please try again.';
+              notifyListeners();
+            },
+          );
+    } catch (e) {
+      if (load != _loadCount) return;
+      _errorMessage = 'Could not load payments. Please try again.';
+    }
+    _isLoading = false;
+    notifyListeners();
   }
 
+  // the stream updates the list, these only write to Firestore
   Future<void> addPayment(Payment payment) async {
-    _all.add(payment.copyWith(id: _nextId()));
-    _refresh();
+    try {
+      await _db.insertPayment(payment);
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Could not add the bill. Please try again.';
+    }
+    notifyListeners();
   }
 
   Future<void> updatePayment(Payment payment) async {
-    final index = _all.indexWhere((p) => p.id == payment.id);
-    if (index == -1) {
-      _errorMessage = 'Payment not found';
-      notifyListeners();
-      return;
+    try {
+      await _db.updatePayment(payment);
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Could not save the bill. Please try again.';
     }
-    _all[index] = payment;
-    _refresh();
+    notifyListeners();
   }
 
+  // owner only: paid gets today's date, unpaid clears it
   Future<void> togglePaid(String id) async {
-    final index = _all.indexWhere((p) => p.id == id);
-    if (index == -1) return;
-    final p = _all[index];
-    _all[index] = p.copyWith(
-      isPaid: !p.isPaid,
-      paidDate: DateTime.now().toIso8601String().substring(0, 10),
-    );
-    _refresh();
+    final matches = _payments.where((p) => p.id == id);
+    if (matches.isEmpty) return;
+    final payment = matches.first;
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    try {
+      await _db.updatePayment(
+        payment.copyWith(isPaid: !payment.isPaid, paidDate: today),
+      );
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Could not save the change. Please try again.';
+    }
+    notifyListeners();
   }
 
   Future<void> deletePayment(String id) async {
-    _all.removeWhere((p) => p.id == id);
-    _refresh();
+    try {
+      await _db.deletePayment(id);
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Could not remove the bill. Please try again.';
+    }
+    notifyListeners();
+  }
+
+  // logout: stop listening and forget the old user's data
+  void clear() {
+    _loadCount++;
+    _sub?.cancel();
+    _sub = null;
+    _isLoading = false;
+    _payments = [];
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 }

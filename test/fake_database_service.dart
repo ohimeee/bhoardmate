@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bhoardmate/models/announcement.dart';
 import 'package:bhoardmate/models/concern.dart';
 import 'package:bhoardmate/models/owner.dart';
+import 'package:bhoardmate/models/payment.dart';
 import 'package:bhoardmate/models/room.dart';
 import 'package:bhoardmate/services/database_service.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -50,6 +51,49 @@ class FakeDatabaseService extends DatabaseService {
     ),
     // vacant room
     const Room(id: 'BH01-RM4', accessCode: '4444', monthlyRent: 2500),
+  ];
+
+  List<Payment> payments = [
+    const Payment(
+      id: 'p1',
+      roomId: 'BH01-RM1',
+      month: '2026-10',
+      roomRent: 2500,
+      electricity: 850,
+      water: 200,
+      dueDate: '2026-10-10',
+      isPaid: true,
+      paidDate: '2026-10-05',
+    ),
+    const Payment(
+      id: 'p2',
+      roomId: 'BH01-RM2',
+      month: '2026-10',
+      roomRent: 2500,
+      electricity: 800,
+      water: 200,
+      dueDate: '2026-10-10',
+    ),
+    const Payment(
+      id: 'p3',
+      roomId: 'BH01-RM3',
+      month: '2026-10',
+      roomRent: 2500,
+      electricity: 760,
+      water: 180,
+      dueDate: '2026-10-10',
+    ),
+    const Payment(
+      id: 'p4',
+      roomId: 'BH01-RM2',
+      month: '2026-09',
+      roomRent: 2500,
+      electricity: 780,
+      water: 200,
+      dueDate: '2026-09-10',
+      isPaid: true,
+      paidDate: '2026-09-08',
+    ),
   ];
 
   List<Announcement> announcements = [
@@ -117,6 +161,9 @@ class FakeDatabaseService extends DatabaseService {
   final _roomsController = StreamController<List<Room>>.broadcast();
   final _ownerController = StreamController<Owner?>.broadcast();
   final _codesController = StreamController<Map<String, String>>.broadcast();
+  final _paymentsController = StreamController<List<Payment>>.broadcast();
+  // roomId the payments stream was opened with (null = owner)
+  String? _paymentsRoomId;
   final _announcementsController =
       StreamController<List<Announcement>>.broadcast();
   final _concernsController = StreamController<List<Concern>>.broadcast();
@@ -226,6 +273,52 @@ class FakeDatabaseService extends DatabaseService {
     }).toList();
     _roomsController.add(List.of(rooms));
     _codesController.add(await getAccessCodes());
+  }
+
+  // PAYMENTS (roomId null = every room, like the owner's query)
+
+  List<Payment> _paymentsFor(String? roomId) {
+    return payments.where((p) => roomId == null || p.roomId == roomId).toList();
+  }
+
+  void _paymentsChanged() {
+    _paymentsController.add(_paymentsFor(_paymentsRoomId));
+  }
+
+  @override
+  Future<List<Payment>> getPayments({String? roomId}) async =>
+      _paymentsFor(roomId);
+
+  @override
+  Stream<List<Payment>> paymentsStream({String? roomId}) {
+    _paymentsRoomId = roomId;
+    return _paymentsController.stream;
+  }
+
+  void failPaymentsStream() {
+    _paymentsController.addError(
+      FirebaseException(plugin: 'firestore', code: 'unavailable'),
+    );
+  }
+
+  @override
+  Future<String> insertPayment(Payment payment) async {
+    final id = _newId();
+    payments = [...payments, payment.copyWith(id: id)];
+    _paymentsChanged();
+    return id;
+  }
+
+  @override
+  Future<void> updatePayment(Payment payment) async {
+    payments = payments.map((p) => p.id == payment.id ? payment : p).toList();
+    _paymentsChanged();
+  }
+
+  @override
+  Future<void> deletePayment(String id) async {
+    payments = payments.where((p) => p.id != id).toList();
+    _paymentsChanged();
   }
 
   // ANNOUNCEMENTS (newest first, like the real query)
