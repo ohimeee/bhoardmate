@@ -189,7 +189,7 @@ void main() {
     await empty.loginOwner('owner@bhoardmate.app', 'admin123');
     await openRooms(tester, empty);
     expect(
-      find.text('No rooms yet. Add a room to get started.'),
+      find.text('No rooms yet'),
       findsOneWidget,
     );
     await tester.pumpWidget(const SizedBox());

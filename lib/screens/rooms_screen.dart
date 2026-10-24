@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../app_theme.dart';
 import '../models/room.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/empty_state.dart';
 
 class RoomsScreen extends StatefulWidget {
   const RoomsScreen({super.key});
@@ -49,16 +51,14 @@ class _RoomsScreenState extends State<RoomsScreen> {
     final auth = context.watch<AuthProvider>();
     final allowed = auth.isLoggedIn && auth.isOwner;
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF6EE),
       appBar: AppBar(
         title: const Text('Rooms'),
-        backgroundColor: const Color(0xFFE7E2F8),
+        backgroundColor: AppColors.rooms,
+        foregroundColor: AppColors.roomsDark,
       ),
       floatingActionButton: allowed
           ? FloatingActionButton.extended(
               heroTag: 'rooms-add-room',
-              backgroundColor: const Color(0xFFE7E2F8),
-              foregroundColor: Colors.black,
               onPressed: _loading || _error != null
                   ? null
                   : () => showDialog<void>(
@@ -75,21 +75,17 @@ class _RoomsScreenState extends State<RoomsScreen> {
           : _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(_error!, textAlign: TextAlign.center),
-                    TextButton(onPressed: _load, child: const Text('Retry')),
-                  ],
-                ),
-              ),
+          ? EmptyState(
+              icon: Icons.error_outline,
+              title: _error!,
+              buttonLabel: 'Retry',
+              onPressed: _load,
             )
           : auth.rooms.isEmpty
-          ? const Center(
-              child: Text('No rooms yet. Add a room to get started.'),
+          ? const EmptyState(
+              icon: Icons.meeting_room_outlined,
+              title: 'No rooms yet',
+              message: 'Add a room to get started.',
             )
           : ListView.builder(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
@@ -97,11 +93,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
               itemBuilder: (context, index) {
                 final room = auth.rooms[index];
                 return Card(
-                  color: Colors.white,
                   margin: const EdgeInsets.only(bottom: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -125,36 +117,28 @@ class _RoomsScreenState extends State<RoomsScreen> {
                           'Monthly rent: \u20B1 ${room.monthlyRent.toStringAsFixed(2)}',
                         ),
                         const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.black,
-                              side: const BorderSide(color: Colors.black),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            OutlinedButton(
+                              onPressed: () => showDialog<void>(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (_) =>
+                                    _RoomDialog(room: room, editRent: true),
+                              ),
+                              child: const Text('Edit rent'),
                             ),
-                            onPressed: () => showDialog<void>(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (_) =>
-                                  _RoomDialog(room: room, editRent: true),
+                            const SizedBox(width: 8),
+                            OutlinedButton(
+                              onPressed: () => showDialog<void>(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (_) => _RoomDialog(room: room),
+                              ),
+                              child: const Text('Reset code'),
                             ),
-                            child: const Text('Edit rent'),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.black,
-                              side: const BorderSide(color: Colors.black),
-                            ),
-                            onPressed: () => showDialog<void>(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (_) => _RoomDialog(room: room),
-                            ),
-                            child: const Text('Reset code'),
-                          ),
+                          ],
                         ),
                       ],
                     ),
@@ -411,10 +395,6 @@ class _RoomDialogState extends State<_RoomDialog> {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF2E6B4F),
-              foregroundColor: Colors.white,
-            ),
             onPressed: _saving ? null : _save,
             child: Text(
               _saving
