@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../app_theme.dart';
 import '../models/room.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/info_card.dart';
 
 class MemberDetailScreen extends StatelessWidget {
   final Room room;
@@ -15,11 +17,13 @@ class MemberDetailScreen extends StatelessWidget {
     final ownProfile = !auth.isOwner && auth.currentRoomId == room.id;
     final current = matches.isEmpty ? null : matches.first;
     final name = _display(current?.boarderName);
+    // boardmates only see name, room and contact (no rent, age, emergency)
+    final boardmate = !auth.isOwner && !ownProfile;
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF6EE),
       appBar: AppBar(
         title: Text(ownProfile ? 'Me' : room.id),
-        backgroundColor: const Color(0xFFFDE7D3),
+        backgroundColor: AppColors.members,
+        foregroundColor: AppColors.membersDark,
       ),
       body: !allowed
           ? const Center(child: Text('Please log in to view this profile.'))
@@ -28,160 +32,83 @@ class MemberDetailScreen extends StatelessWidget {
           : ListView(
               padding: const EdgeInsets.all(24),
               children: [
-                if (!ownProfile) ...[
-                  const SizedBox(height: 24),
-                  const Center(
-                    child: CircleAvatar(
-                      radius: 52,
-                      backgroundColor: Color(0xFFFDE7D3),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    name,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 22),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Boarder',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.black54),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-                Card(
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (ownProfile) ...[
-                          Row(
-                            children: [
-                              const CircleAvatar(
-                                radius: 30,
-                                backgroundColor: Color(0xFFFDE7D3),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      name,
-                                      style: const TextStyle(fontSize: 18),
-                                    ),
-                                    Text(
-                                      'Room ${current.id}',
-                                      style: const TextStyle(
-                                        color: Colors.black54,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          Text('Contact: ${_display(current.contactNumber)}'),
-                          const SizedBox(height: 8),
-                          Text('Age: ${current.age ?? 'Not provided'}'),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Emergency: ${_display(current.emergencyContactName)}, ${_display(current.emergencyContactNumber)}',
-                          ),
-                        ] else ...[
-                          _field('Room ID', current.id),
-                          _field(
-                            'Monthly rent',
-                            '\u20B1 ${current.monthlyRent.toStringAsFixed(2)}',
-                          ),
-                          _field('Contact', _display(current.contactNumber)),
-                          _field('Age', '${current.age ?? 'Not provided'}'),
-                          _field(
-                            'Emergency contact',
-                            '${_display(current.emergencyContactName)}, ${_display(current.emergencyContactNumber)}',
-                          ),
-                        ],
-                      ],
+                const Center(
+                  child: CircleAvatar(
+                    radius: 48,
+                    backgroundColor: AppColors.members,
+                    child: Icon(
+                      Icons.person,
+                      size: 48,
+                      color: AppColors.membersDark,
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+                Text(
+                  name,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  ownProfile ? 'Room ${current.id}' : 'Boarder',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.textLight),
+                ),
+                const SizedBox(height: 24),
+                if (ownProfile)
+                  InfoCard(
+                    rows: {
+                      'Contact': _display(current.contactNumber),
+                      'Age': '${current.age ?? 'Not provided'}',
+                      'Emergency contact':
+                          '${_display(current.emergencyContactName)}, ${_display(current.emergencyContactNumber)}',
+                    },
+                  )
+                else if (boardmate)
+                  InfoCard(
+                    rows: {
+                      'Room ID': current.id,
+                      'Contact': _display(current.contactNumber),
+                    },
+                  )
+                else
+                  InfoCard(
+                    rows: {
+                      'Room ID': current.id,
+                      'Monthly rent':
+                          '₱ ${current.monthlyRent.toStringAsFixed(2)}',
+                      'Contact': _display(current.contactNumber),
+                      'Age': '${current.age ?? 'Not provided'}',
+                      'Emergency contact':
+                          '${_display(current.emergencyContactName)}, ${_display(current.emergencyContactNumber)}',
+                    },
+                  ),
                 if (ownProfile) ...[
                   const SizedBox(height: 12),
-                  Padding(
-                    padding:
-                        (Theme.of(context).cardTheme.margin ??
-                                const EdgeInsets.all(4))
-                            .resolve(Directionality.of(context))
-                            .copyWith(top: 0, bottom: 0),
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.black,
-                        side: const BorderSide(color: Colors.black),
-                        backgroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      onPressed: () => showDialog<void>(
-                        context: context,
-                        barrierDismissible: false,
-                        builder: (_) => _EditProfileDialog(room: current),
-                      ),
-                      child: const Text('Edit Profile'),
+                  OutlinedButton(
+                    onPressed: () => showDialog<void>(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (_) => _EditProfileDialog(room: current),
                     ),
+                    child: const Text('Edit profile'),
                   ),
                   const SizedBox(height: 16),
-                  Card(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Landlord',
-                            style: TextStyle(color: Colors.black54),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            auth.owner?.name ?? '',
-                            style: const TextStyle(fontSize: 18),
-                          ),
-                          Text(
-                            auth.owner?.contactNumber ?? '',
-                            style: const TextStyle(color: Colors.black54),
-                          ),
-                        ],
-                      ),
-                    ),
+                  InfoCard(
+                    title: 'Landlord',
+                    rows: {
+                      'Name': auth.owner?.name ?? '',
+                      'Contact': auth.owner?.contactNumber ?? '',
+                    },
                   ),
                 ],
               ],
             ),
     );
   }
-
-  Widget _field(String label, String value) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(color: Colors.black54)),
-        Text(value, style: const TextStyle(fontSize: 18)),
-      ],
-    ),
-  );
 
   String _display(String? value) =>
       value == null || value.trim().isEmpty ? 'Not provided' : value;
@@ -344,10 +271,6 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF2E6B4F),
-              foregroundColor: Colors.white,
-            ),
             onPressed: _saving ? null : _save,
             child: Text(_saving ? 'Saving...' : 'Save'),
           ),
