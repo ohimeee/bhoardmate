@@ -38,13 +38,13 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
     _roomId = p?.roomId;
     _monthController = TextEditingController(text: p?.month ?? month);
     _rentController = TextEditingController(
-      text: p?.roomRent.toStringAsFixed(0) ?? '',
+      text: p == null ? '' : _amountText(p.roomRent),
     );
     _electricityController = TextEditingController(
-      text: p?.electricity.toStringAsFixed(2) ?? '',
+      text: p == null ? '' : _amountText(p.electricity),
     );
     _waterController = TextEditingController(
-      text: p?.water.toStringAsFixed(0) ?? '',
+      text: p == null ? '' : _amountText(p.water),
     );
     // rent is due on the 10th by default
     _dueDate = p?.dueDate ?? '$month-10';
@@ -59,10 +59,20 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
     super.dispose();
   }
 
+  // 3500 shows as "3500", 150.75 stays "150.75" (no rounding, so saving
+  // an edited bill never changes the amounts)
+  String _amountText(double amount) {
+    if (amount == amount.roundToDouble()) return amount.toStringAsFixed(0);
+    return amount.toString();
+  }
+
   String? _amountValidator(String? value, String label) {
     if (value == null || value.trim().isEmpty) return '$label is required';
     final amount = double.tryParse(value.trim());
-    if (amount == null || amount < 0) return 'Enter a valid amount';
+    // tryParse also accepts "NaN" and "Infinity", so check isFinite too
+    if (amount == null || !amount.isFinite || amount < 0) {
+      return 'Enter a valid amount';
+    }
     return null;
   }
 
@@ -73,7 +83,7 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
     setState(() {
       _roomId = roomId;
       if (room.isNotEmpty) {
-        _rentController.text = room.first.monthlyRent.toStringAsFixed(0);
+        _rentController.text = _amountText(room.first.monthlyRent);
       }
     });
   }
@@ -211,7 +221,9 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
               controller: _rentController,
               enabled: !_saving,
               decoration: const InputDecoration(labelText: 'Room rent (₱)'),
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               validator: (value) => _amountValidator(value, 'Room rent'),
             ),
             const SizedBox(height: 12),
@@ -247,7 +259,9 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
               controller: _waterController,
               enabled: !_saving,
               decoration: const InputDecoration(labelText: 'Water (₱)'),
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               validator: (value) => _amountValidator(value, 'Water'),
             ),
             const SizedBox(height: 12),
