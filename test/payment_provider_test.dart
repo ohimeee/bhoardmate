@@ -71,4 +71,26 @@ void main() {
     expect(provider.payments, isEmpty);
     expect(provider.outstandingBalance, 0);
   });
+
+  test('a load still running at logout is ignored', () async {
+    final provider = PaymentProvider(db: FakeDatabaseService());
+    final load = provider.loadPayments(roomId: 'BH01-RM2');
+    provider.clear();
+    await load;
+    expect(provider.payments, isEmpty);
+    expect(provider.isLoading, isFalse);
+  });
+
+  test('a good snapshot after a stream error clears the error', () async {
+    final db = FakeDatabaseService();
+    final provider = PaymentProvider(db: db);
+    await provider.loadPayments();
+    db.failPaymentsStream();
+    await Future<void>.delayed(Duration.zero);
+    expect(provider.errorMessage, isNotNull);
+    await db.deletePayment('p4');
+    await Future<void>.delayed(Duration.zero);
+    expect(provider.errorMessage, isNull);
+    expect(provider.payments.length, 3);
+  });
 }

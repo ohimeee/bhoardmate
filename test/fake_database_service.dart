@@ -295,6 +295,12 @@ class FakeDatabaseService extends DatabaseService {
     return _paymentsController.stream;
   }
 
+  void failPaymentsStream() {
+    _paymentsController.addError(
+      FirebaseException(plugin: 'firestore', code: 'unavailable'),
+    );
+  }
+
   @override
   Future<String> insertPayment(Payment payment) async {
     final id = _newId();
