@@ -16,6 +16,9 @@ class AnnouncementProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   StreamSubscription<List<Announcement>>? _sub;
+  // each load gets a number; clear() or a newer load makes the old one
+  // stale so a slow answer can't bring back data after logout
+  int _loadCount = 0;
 
   List<Announcement> get announcements => _announcements;
   bool get isLoading => _isLoading;
@@ -24,15 +27,20 @@ class AnnouncementProvider extends ChangeNotifier {
   // get the list once, then keep listening so a new announcement
   // from the owner shows up on every boarder's phone by itself
   Future<void> loadAnnouncements() async {
+    final load = ++_loadCount;
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
     try {
-      _announcements = await _db.getAnnouncements();
+      final list = await _db.getAnnouncements();
+      if (load != _loadCount) return;
+      _announcements = list;
       _sub?.cancel();
       _sub = _db.announcementsStream().listen(
         (list) {
           _announcements = list;
+          // a good snapshot after a stream error means it works again
+          _errorMessage = null;
           notifyListeners();
         },
         onError: (e) {
@@ -41,6 +49,7 @@ class AnnouncementProvider extends ChangeNotifier {
         },
       );
     } catch (e) {
+      if (load != _loadCount) return;
       _errorMessage = 'Could not load announcements. Please try again.';
     }
     _isLoading = false;
@@ -80,8 +89,10 @@ class AnnouncementProvider extends ChangeNotifier {
 
   // logout: stop listening and forget the old user's data
   void clear() {
+    _loadCount++;
     _sub?.cancel();
     _sub = null;
+    _isLoading = false;
     _announcements = [];
     _errorMessage = null;
     notifyListeners();
