@@ -254,24 +254,15 @@ class _RoomDialogState extends State<_RoomDialog> {
             monthlyRent: double.parse(_rent.text.trim()),
           ),
         );
-        if (!mounted) return;
-        if (auth.errorMessage != null) {
-          setState(() {
-            _saving = false;
-            _error = auth.errorMessage;
-          });
-          return;
-        }
       } else if (widget.editRent) {
         final matches = auth.rooms.where((item) => item.id == room.id);
         if (matches.isEmpty) throw StateError('Room no longer exists');
         final current = matches.first;
-        final rent = double.parse(_rent.text.trim());
         await auth.updateRoom(
           Room(
             id: current.id,
             accessCode: current.accessCode,
-            monthlyRent: rent,
+            monthlyRent: double.parse(_rent.text.trim()),
             boarderName: current.boarderName,
             contactNumber: current.contactNumber,
             age: current.age,
@@ -279,27 +270,19 @@ class _RoomDialogState extends State<_RoomDialog> {
             emergencyContactNumber: current.emergencyContactNumber,
           ),
         );
-        if (!mounted) return;
-        final updated = auth.rooms.where((item) => item.id == room.id);
-        if (updated.isEmpty || updated.first.monthlyRent != rent) {
-          throw StateError('Rent update did not complete');
-        }
       } else {
         final matches = auth.rooms.where((item) => item.id == room.id);
         if (matches.isEmpty) throw StateError('Room no longer exists');
         await auth.resetAccessCode(room.id, _code.text.trim());
-        if (!mounted) return;
-        // The sample provider does not clear old errors on reset.
-        final updated = auth.rooms.where((item) => item.id == room.id);
-        if (updated.isEmpty ||
-            updated.first.accessCode != _code.text.trim() ||
-            updated.first.boarderName != null ||
-            updated.first.contactNumber != null ||
-            updated.first.age != null ||
-            updated.first.emergencyContactName != null ||
-            updated.first.emergencyContactNumber != null) {
-          throw StateError('Reset did not complete');
-        }
+      }
+      if (!mounted) return;
+      // the provider clears errorMessage when the change worked
+      if (auth.errorMessage != null) {
+        setState(() {
+          _saving = false;
+          _error = auth.errorMessage;
+        });
+        return;
       }
       setState(() => _saving = false);
       WidgetsBinding.instance.addPostFrameCallback((_) {

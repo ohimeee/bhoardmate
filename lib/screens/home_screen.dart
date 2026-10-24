@@ -6,7 +6,6 @@ import '../providers/auth_provider.dart';
 import '../providers/payment_provider.dart';
 import 'announcements_screen.dart';
 import 'concerns_screen.dart';
-import 'login_screen.dart';
 import 'members_screen.dart';
 import 'payments_screen.dart';
 import 'rooms_screen.dart';
@@ -43,13 +42,8 @@ class HomeScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              context.read<AuthProvider>().logout();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-              );
-            },
+            // MainScreen opens the login screen after logout
+            onPressed: () => context.read<AuthProvider>().logout(),
           ),
         ],
       ),

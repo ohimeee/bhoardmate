@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'fake_database_service.dart';
+
 Future<void> openScreen(WidgetTester tester, AuthProvider auth) async {
   await tester.pumpWidget(
     MultiProvider(
@@ -22,7 +24,7 @@ void main() {
   testWidgets('boarder reads newest announcements without owner actions', (
     tester,
   ) async {
-    final auth = AuthProvider();
+    final auth = AuthProvider(db: FakeDatabaseService());
     await auth.loginBoarder('BH01-RM2', '2222');
     await openScreen(tester, auth);
     expect(find.text('Pest control'), findsOneWidget);
@@ -38,7 +40,7 @@ void main() {
   testWidgets('owner validates, creates, edits and confirms deletion', (
     tester,
   ) async {
-    final auth = AuthProvider();
+    final auth = AuthProvider(db: FakeDatabaseService());
     await auth.loginOwner('owner@bhoardmate.app', 'admin123');
     await openScreen(tester, auth);
     await tester.tap(find.text('New announcement'));
@@ -81,7 +83,7 @@ void main() {
   });
 
   testWidgets('logged out users cannot read announcements', (tester) async {
-    await openScreen(tester, AuthProvider());
+    await openScreen(tester, AuthProvider(db: FakeDatabaseService()));
     expect(
       find.text('Please log in again to view announcements.'),
       findsOneWidget,

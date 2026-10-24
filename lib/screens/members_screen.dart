@@ -43,7 +43,7 @@ class _MembersScreenState extends State<MembersScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     if (widget.showOwnProfile && auth.isLoggedIn && auth.isOwner) {
-      return const OwnerProfileScreen();
+      return OwnerProfileScreen(onSave: auth.updateOwner);
     }
     if (widget.showOwnProfile && auth.isLoggedIn && !auth.isOwner) {
       final ownRooms = auth.rooms.where(

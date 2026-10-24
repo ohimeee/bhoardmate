@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'fake_database_service.dart';
+
 void main() {
   testWidgets('owner form validates and passes profile fields to save action', (
     tester,
   ) async {
-    final auth = AuthProvider();
+    final auth = AuthProvider(db: FakeDatabaseService());
     await auth.loginOwner('owner@bhoardmate.app', 'admin123');
     Owner? saved;
     await tester.pumpWidget(
@@ -40,14 +42,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(saved!.name, 'New Owner');
     expect(saved!.contactNumber, '09171234567');
-    expect(saved!.id, auth.owner.id);
-    expect(saved!.email, auth.owner.email);
+    expect(saved!.id, auth.owner!.id);
+    expect(saved!.email, auth.owner!.email);
   });
 
   testWidgets('owner editing stays disabled without a save action', (
     tester,
   ) async {
-    final auth = AuthProvider();
+    final auth = AuthProvider(db: FakeDatabaseService());
     await auth.loginOwner('owner@bhoardmate.app', 'admin123');
     await tester.pumpWidget(
       ChangeNotifierProvider.value(

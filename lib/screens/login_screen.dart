@@ -5,10 +5,45 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import 'main_screen.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
-  void _goToMain(BuildContext context) {
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  // simple owner fields until the real form in #4
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  bool _checking = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkSession());
+  }
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _password.dispose();
+    super.dispose();
+  }
+
+  // skip the login screen if Firebase still has the account
+  Future<void> _checkSession() async {
+    final auth = context.read<AuthProvider>();
+    await auth.loadSession();
+    if (!mounted) return;
+    if (auth.isLoggedIn) {
+      _goToMain();
+    } else {
+      setState(() => _checking = false);
+    }
+  }
+
+  void _goToMain() {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const MainScreen()),
@@ -17,6 +52,10 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final error = context.watch<AuthProvider>().errorMessage;
+    if (_checking) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     return Scaffold(
       body: Center(
         child: Padding(
@@ -25,7 +64,7 @@ class LoginScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'BhoardMate',
+                'BHoardMate',
                 style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 24),
@@ -35,21 +74,36 @@ class LoginScreen extends StatelessWidget {
                     'BH01-RM2',
                     '2222',
                   );
-                  if (ok && context.mounted) _goToMain(context);
+                  if (ok && mounted) _goToMain();
                 },
                 child: const Text('Demo: log in as boarder (BH01-RM2)'),
+              ),
+              const SizedBox(height: 24),
+              TextField(
+                controller: _email,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(labelText: 'Owner email'),
+              ),
+              TextField(
+                controller: _password,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Password'),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () async {
                   final ok = await context.read<AuthProvider>().loginOwner(
-                    'owner@bhoardmate.app',
-                    'admin123',
+                    _email.text,
+                    _password.text,
                   );
-                  if (ok && context.mounted) _goToMain(context);
+                  if (ok && mounted) _goToMain();
                 },
-                child: const Text('Demo: log in as owner'),
+                child: const Text('Log in as owner'),
               ),
+              if (error != null) ...[
+                const SizedBox(height: 12),
+                Text(error, style: const TextStyle(color: Colors.red)),
+              ],
             ],
           ),
         ),

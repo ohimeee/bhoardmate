@@ -155,11 +155,11 @@ class MemberDetailScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            auth.owner.name,
+                            auth.owner?.name ?? '',
                             style: const TextStyle(fontSize: 18),
                           ),
                           Text(
-                            auth.owner.contactNumber,
+                            auth.owner?.contactNumber ?? '',
                             style: const TextStyle(color: Colors.black54),
                           ),
                         ],

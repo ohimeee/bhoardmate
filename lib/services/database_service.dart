@@ -9,10 +9,19 @@ import '../models/room.dart';
 
 // the only class that talks to Firebase, providers call this
 class DatabaseService {
-  final _db = FirebaseFirestore.instance;
-  final _auth = FirebaseAuth.instance;
+  // getters (not fields) so the fake service in the tests can be
+  // created without starting Firebase
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
 
   String? get currentUid => _auth.currentUser?.uid;
+
+  // Firebase error code like 'permission-denied',
+  // the providers turn it into a message for the screen
+  String errorCode(Object e) {
+    if (e is FirebaseException) return e.code;
+    return 'unknown';
+  }
 
   // LOGIN
 
@@ -117,6 +126,18 @@ class DatabaseService {
       codes[doc.id] = doc.data()['accessCode'] as String;
     }
     return codes;
+  }
+
+  // same as getAccessCodes but live, so a reset on another
+  // owner phone shows the new code here too
+  Stream<Map<String, String>> accessCodesStream() {
+    return _db.collection('roomCodes').snapshots().map((snapshot) {
+      final codes = <String, String>{};
+      for (final doc in snapshot.docs) {
+        codes[doc.id] = doc.data()['accessCode'] as String;
+      }
+      return codes;
+    });
   }
 
   Future<void> insertRoom(Room room) async {
