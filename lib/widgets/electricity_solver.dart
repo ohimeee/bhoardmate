@@ -45,8 +45,12 @@ class _ElectricitySolverState extends State<ElectricitySolver> {
     final rate = double.tryParse(_rateController.text.trim());
     final boarders = int.tryParse(_boardersController.text.trim());
     if (kwh == null || rate == null || boarders == null) return null;
+    // tryParse also accepts "NaN" and "Infinity"
+    if (!kwh.isFinite || !rate.isFinite) return null;
     if (kwh < 0 || rate < 0 || boarders < 1) return null;
-    return kwh * rate / boarders;
+    final share = kwh * rate / boarders;
+    // a huge kWh x rate can still overflow to Infinity
+    return share.isFinite ? share : null;
   }
 
   Widget _numberField(TextEditingController controller, String label) {
