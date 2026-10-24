@@ -188,10 +188,7 @@ void main() {
     final empty = EmptyRooms();
     await empty.loginOwner('owner@bhoardmate.app', 'admin123');
     await openRooms(tester, empty);
-    expect(
-      find.text('No rooms yet'),
-      findsOneWidget,
-    );
+    expect(find.text('No rooms yet'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     final failed = FailedRooms();
     await failed.loginOwner('owner@bhoardmate.app', 'admin123');
