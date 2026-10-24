@@ -55,6 +55,7 @@ class FakeDatabaseService extends DatabaseService {
 
   final _roomsController = StreamController<List<Room>>.broadcast();
   final _ownerController = StreamController<Owner?>.broadcast();
+  final _codesController = StreamController<Map<String, String>>.broadcast();
   String? _uid;
   String? _roomId;
 
@@ -115,9 +116,21 @@ class FakeDatabaseService extends DatabaseService {
   }
 
   @override
+  Stream<Map<String, String>> accessCodesStream() => _codesController.stream;
+
+  // like Firestore after the owner resets this boarder's code:
+  // the rooms stream fails with permission-denied
+  void revokeSession() {
+    _roomsController.addError(
+      FirebaseException(plugin: 'firestore', code: 'permission-denied'),
+    );
+  }
+
+  @override
   Future<void> insertRoom(Room room) async {
     rooms = [...rooms, room];
     _roomsController.add(List.of(rooms));
+    _codesController.add(await getAccessCodes());
   }
 
   // like the real one: never changes the code
@@ -146,5 +159,6 @@ class FakeDatabaseService extends DatabaseService {
       return Room(id: r.id, accessCode: newCode, monthlyRent: r.monthlyRent);
     }).toList();
     _roomsController.add(List.of(rooms));
+    _codesController.add(await getAccessCodes());
   }
 }

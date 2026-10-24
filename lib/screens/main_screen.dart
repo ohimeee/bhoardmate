@@ -8,6 +8,7 @@ import '../providers/holiday_provider.dart';
 import '../providers/payment_provider.dart';
 import 'announcements_screen.dart';
 import 'home_screen.dart';
+import 'login_screen.dart';
 import 'members_screen.dart';
 import 'payments_screen.dart';
 
@@ -49,8 +50,25 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  bool _leaving = false;
+
   @override
   Widget build(BuildContext context) {
+    // logout button or the owner reset this boarder's code:
+    // go back to login and remove every screen behind it
+    final loggedIn = context.watch<AuthProvider>().isLoggedIn;
+    if (!loggedIn && !_leaving) {
+      _leaving = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+      });
+    }
+
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _screens),
       bottomNavigationBar: BottomNavigationBar(

@@ -25,6 +25,7 @@ class AuthProvider extends ChangeNotifier {
   // live updates from Firestore, cancelled on logout
   StreamSubscription<List<Room>>? _roomsSub;
   StreamSubscription<Owner?>? _ownerSub;
+  StreamSubscription<Map<String, String>>? _codesSub;
 
   List<Room> get rooms => _rooms;
   Owner? get owner => _owner;
@@ -120,10 +121,14 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await _roomsSub?.cancel();
-    await _ownerSub?.cancel();
+    // no await: logout can be called from inside a stream's
+    // onError, and that stream can't finish cancelling until we return
+    _roomsSub?.cancel();
+    _ownerSub?.cancel();
+    _codesSub?.cancel();
     _roomsSub = null;
     _ownerSub = null;
+    _codesSub = null;
     await _db.signOut();
     _rooms = [];
     _codes = {};
@@ -147,6 +152,14 @@ class AuthProvider extends ChangeNotifier {
       _owner = owner;
       notifyListeners();
     }, onError: _onStreamError);
+    // owner only: codes changed on another owner phone
+    await _codesSub?.cancel();
+    if (_isOwner) {
+      _codesSub = _db.accessCodesStream().listen((codes) {
+        _codes = codes;
+        _setRooms(_rooms);
+      }, onError: _onStreamError);
+    }
   }
 
   // screens call this for Retry, it throws if loading fails
@@ -170,9 +183,15 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // e.g. the owner reset this boarder's code, so the rules deny the reads
-  void _onStreamError(Object e) {
-    _errorMessage = _errorText(e);
+  Future<void> _onStreamError(Object e) async {
+    if (_db.errorCode(e) == 'permission-denied') {
+      // the owner reset this room's code, so the rules deny every read.
+      // log out and clear the cached rooms, MainScreen goes back to login
+      await logout();
+      _errorMessage = 'Your access code was changed. Please log in again.';
+    } else {
+      _errorMessage = _errorText(e);
+    }
     notifyListeners();
   }
 
@@ -247,6 +266,7 @@ class AuthProvider extends ChangeNotifier {
   void dispose() {
     _roomsSub?.cancel();
     _ownerSub?.cancel();
+    _codesSub?.cancel();
     super.dispose();
   }
 }
