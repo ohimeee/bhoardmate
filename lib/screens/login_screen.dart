@@ -1,56 +1,238 @@
-// placeholder, real login form is #4
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
 import 'main_screen.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
-  void _goToMain(BuildContext context) {
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _roomId;
+  late final TextEditingController _code;
+  late final TextEditingController _email;
+  late final TextEditingController _password;
+
+  bool _ownerMode = false;
+  // true while we check if someone is still logged in
+  bool _checking = true;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _roomId = TextEditingController();
+    _code = TextEditingController();
+    _email = TextEditingController();
+    _password = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkSession());
+  }
+
+  @override
+  void dispose() {
+    _roomId.dispose();
+    _code.dispose();
+    _email.dispose();
+    _password.dispose();
+    super.dispose();
+  }
+
+  // skip the login screen if Firebase still has the account
+  Future<void> _checkSession() async {
+    final auth = context.read<AuthProvider>();
+    await auth.loadSession();
+    if (!mounted) return;
+    if (auth.isLoggedIn) {
+      _goToMain();
+    } else {
+      setState(() => _checking = false);
+    }
+  }
+
+  void _goToMain() {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const MainScreen()),
     );
   }
 
+  Future<void> _login() async {
+    if (_loading || !_formKey.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
+    setState(() => _loading = true);
+    final auth = context.read<AuthProvider>();
+    final ok = _ownerMode
+        ? await auth.loginOwner(_email.text, _password.text)
+        : await auth.loginBoarder(_roomId.text, _code.text);
+    if (!mounted) return;
+    setState(() => _loading = false);
+    if (ok) _goToMain();
+  }
+
+  void _switchMode() {
+    setState(() {
+      _ownerMode = !_ownerMode;
+      _formKey.currentState?.reset();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final error = context.watch<AuthProvider>().errorMessage;
+
+    if (_checking) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFFAF6EE),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'BhoardMate',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+      backgroundColor: const Color(0xFFFAF6EE),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Icon(
+                    Icons.house_rounded,
+                    size: 72,
+                    color: Color(0xFF2E6B4F),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'BHoardMate',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    _ownerMode
+                        ? 'Owner login'
+                        : 'Log in with your room ID and access code',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey.shade700),
+                  ),
+                  const SizedBox(height: 32),
+                  if (_ownerMode) ...[
+                    TextFormField(
+                      controller: _email,
+                      enabled: !_loading,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Email is required';
+                        }
+                        if (!value.contains('@')) return 'Enter a valid email';
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _password,
+                      enabled: !_loading,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Password',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Password is required';
+                        }
+                        return null;
+                      },
+                    ),
+                  ] else ...[
+                    TextFormField(
+                      controller: _roomId,
+                      enabled: !_loading,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: const InputDecoration(
+                        labelText: 'Room ID',
+                        hintText: 'BH01-RM2',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Room ID is required';
+                        }
+                        // same format as the Rooms screen
+                        final id = value.trim().toUpperCase();
+                        if (!RegExp(r'^BH\d+-RM\d+$').hasMatch(id)) {
+                          return 'Use a room ID like BH01-RM2';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _code,
+                      enabled: !_loading,
+                      obscureText: true,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Access code',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Access code is required';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  if (error != null && !_loading)
+                    Text(
+                      error,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Color(0xFFD9534F)),
+                    ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loading ? null : _login,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2E6B4F),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: _loading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Log in'),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: _loading ? null : _switchMode,
+                    child: Text(
+                      _ownerMode
+                          ? 'Boarder? Log in with your room ID'
+                          : 'Owner? Log in as admin',
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () async {
-                  final ok = await context.read<AuthProvider>().loginBoarder(
-                    'BH01-RM2',
-                    '2222',
-                  );
-                  if (ok && context.mounted) _goToMain(context);
-                },
-                child: const Text('Demo: log in as boarder (BH01-RM2)'),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: () async {
-                  final ok = await context.read<AuthProvider>().loginOwner(
-                    'owner@bhoardmate.app',
-                    'admin123',
-                  );
-                  if (ok && context.mounted) _goToMain(context);
-                },
-                child: const Text('Demo: log in as owner'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
