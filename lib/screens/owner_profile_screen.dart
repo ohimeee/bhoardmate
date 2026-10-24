@@ -42,8 +42,8 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
       return;
     }
     final auth = context.read<AuthProvider>();
-    if (!auth.isLoggedIn || !auth.isOwner) return;
     final owner = auth.owner;
+    if (!auth.isLoggedIn || !auth.isOwner || owner == null) return;
     setState(() {
       _saving = true;
       _error = null;
@@ -90,6 +90,9 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
             ? const Center(
                 child: Text('Please log in as the owner to view this profile.'),
               )
+            // owner info still loading from Firestore
+            : owner == null
+            ? const Center(child: CircularProgressIndicator())
             : ListView(
                 padding: const EdgeInsets.all(24),
                 children: [

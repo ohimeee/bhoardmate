@@ -5,12 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'fake_database_service.dart';
+
 class EmptyRooms extends AuthProvider {
+  EmptyRooms() : super(db: FakeDatabaseService());
+
   @override
   List<Room> get rooms => [];
 }
 
 class FailedRooms extends AuthProvider {
+  FailedRooms() : super(db: FakeDatabaseService());
+
   @override
   Future<void> loadRooms() async => throw Exception('Offline');
 }
@@ -29,7 +35,7 @@ void main() {
   testWidgets(
     'editing rent validates and preserves the code and all boarder fields',
     (tester) async {
-      final auth = AuthProvider();
+      final auth = AuthProvider(db: FakeDatabaseService());
       await auth.loginOwner('owner@bhoardmate.app', 'admin123');
       final before = auth.rooms.first;
       await openRooms(tester, auth);
@@ -57,7 +63,7 @@ void main() {
   testWidgets('opening Rooms does not animate the hidden announcement button', (
     tester,
   ) async {
-    final auth = AuthProvider();
+    final auth = AuthProvider(db: FakeDatabaseService());
     await auth.loginOwner('owner@bhoardmate.app', 'admin123');
     await tester.pumpWidget(
       ChangeNotifierProvider.value(
@@ -104,7 +110,7 @@ void main() {
   testWidgets(
     'boarders and logged out users cannot see room codes or actions',
     (tester) async {
-      final auth = AuthProvider();
+      final auth = AuthProvider(db: FakeDatabaseService());
       await openRooms(tester, auth);
       expect(find.text('Only the owner can manage rooms.'), findsOneWidget);
       expect(find.text('Add room'), findsNothing);
@@ -117,7 +123,7 @@ void main() {
   testWidgets('owner validates and adds a room without duplicate IDs', (
     tester,
   ) async {
-    final auth = AuthProvider();
+    final auth = AuthProvider(db: FakeDatabaseService());
     await auth.loginOwner('owner@bhoardmate.app', 'admin123');
     await openRooms(tester, auth);
     await tester.tap(find.text('Add room'));
@@ -144,7 +150,7 @@ void main() {
   testWidgets(
     'reset requires confirmation and clears boarder fields preserving room and rent',
     (tester) async {
-      final auth = AuthProvider();
+      final auth = AuthProvider(db: FakeDatabaseService());
       await auth.loginOwner('owner@bhoardmate.app', 'admin123');
       final original = auth.rooms.first;
       await openRooms(tester, auth);

@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'fake_database_service.dart';
+
 void main() {
   testWidgets('own-profile mode opens the signed-in boarder profile', (
     tester,
   ) async {
-    final auth = AuthProvider();
+    final auth = AuthProvider(db: FakeDatabaseService());
     await auth.loginBoarder('BH01-RM2', '2222');
     await tester.pumpWidget(
       ChangeNotifierProvider.value(
@@ -25,7 +27,7 @@ void main() {
   testWidgets('owner opens room details without profile editing', (
     tester,
   ) async {
-    final auth = AuthProvider();
+    final auth = AuthProvider(db: FakeDatabaseService());
     await auth.loginOwner('owner@bhoardmate.app', 'admin123');
     await tester.pumpWidget(
       ChangeNotifierProvider.value(
@@ -47,7 +49,7 @@ void main() {
   testWidgets('boarder can view a fellow boardmate but cannot edit them', (
     tester,
   ) async {
-    final auth = AuthProvider();
+    final auth = AuthProvider(db: FakeDatabaseService());
     await auth.loginBoarder('BH01-RM2', '2222');
     await tester.pumpWidget(
       ChangeNotifierProvider.value(
@@ -66,7 +68,7 @@ void main() {
   });
 
   testWidgets('boarder validates and saves their own profile', (tester) async {
-    final auth = AuthProvider();
+    final auth = AuthProvider(db: FakeDatabaseService());
     await auth.loginBoarder('BH01-RM2', '2222');
     final original = auth.rooms[1];
     await tester.pumpWidget(
