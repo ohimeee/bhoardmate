@@ -13,12 +13,22 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // simple owner fields until the real form in #4
+  final _email = TextEditingController();
+  final _password = TextEditingController();
   bool _checking = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkSession());
+  }
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _password.dispose();
+    super.dispose();
   }
 
   // skip the login screen if Firebase still has the account
@@ -67,6 +77,28 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (ok && mounted) _goToMain();
                 },
                 child: const Text('Demo: log in as boarder (BH01-RM2)'),
+              ),
+              const SizedBox(height: 24),
+              TextField(
+                controller: _email,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(labelText: 'Owner email'),
+              ),
+              TextField(
+                controller: _password,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Password'),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () async {
+                  final ok = await context.read<AuthProvider>().loginOwner(
+                    _email.text,
+                    _password.text,
+                  );
+                  if (ok && mounted) _goToMain();
+                },
+                child: const Text('Log in as owner'),
               ),
               if (error != null) ...[
                 const SizedBox(height: 12),

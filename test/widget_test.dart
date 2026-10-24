@@ -56,4 +56,20 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('owner logs in with email and password', (tester) async {
+    await openLogin(tester, AuthProvider(db: FakeDatabaseService()));
+    await tester.enterText(
+      find.byType(TextField).at(0),
+      'owner@bhoardmate.app',
+    );
+    await tester.enterText(find.byType(TextField).at(1), 'wrong');
+    await tester.tap(find.text('Log in as owner'));
+    await tester.pumpAndSettle();
+    expect(find.text('Wrong email or password'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).at(1), 'admin123');
+    await tester.tap(find.text('Log in as owner'));
+    await tester.pumpAndSettle();
+    expect(find.text('Logged in as: Owner'), findsOneWidget);
+  });
 }
