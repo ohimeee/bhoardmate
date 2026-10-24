@@ -1,0 +1,93 @@
+rules_version = '2';
+
+// BHoardMate security rules
+// owner = has a doc in owners/
+// boarder = anonymous user with a session whose code still matches the room
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/owners/$(request.auth.uid));
+    }
+
+    function session() {
+      return get(/databases/$(database)/documents/sessions/$(request.auth.uid)).data;
+    }
+
+    function roomCode(roomId) {
+      return get(/databases/$(database)/documents/roomCodes/$(roomId)).data.accessCode;
+    }
+
+    // checked on every read, so resetting a code locks the old boarder out
+    function validBoarder() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/sessions/$(request.auth.uid))
+        && session().accessCode == roomCode(session().roomId);
+    }
+
+    function myRoom() {
+      return session().roomId;
+    }
+
+    function onlyChanges(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    match /owners/{uid} {
+      // boarders see the landlord card
+      allow read: if signedIn();
+      // first owner doc, only for the owner's email account
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.auth.token.email == 'owner@bhoardmate.app';
+      allow update: if signedIn() && request.auth.uid == uid
+        && onlyChanges(['name', 'contactNumber']);
+    }
+
+    match /roomCodes/{roomId} {
+      allow read, write: if isOwner();
+    }
+
+    match /sessions/{uid} {
+      // the room ID + code check for boarder login
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.accessCode == roomCode(request.resource.data.roomId);
+      allow read, delete: if signedIn() && request.auth.uid == uid;
+      allow read: if isOwner();
+    }
+
+    match /rooms/{roomId} {
+      // boarders can see boardmates (codes are not in here)
+      allow read: if isOwner() || validBoarder();
+      allow create, delete: if isOwner();
+      // boarder edits only the profile fields of their own room
+      allow update: if isOwner()
+        || (validBoarder() && roomId == myRoom()
+          && onlyChanges(['boarderName', 'contactNumber', 'age',
+            'emergencyContactName', 'emergencyContactNumber']));
+    }
+
+    match /payments/{id} {
+      allow read, write: if isOwner();
+      allow read: if validBoarder() && resource.data.roomId == myRoom();
+    }
+
+    match /announcements/{id} {
+      allow read: if isOwner() || validBoarder();
+      allow write: if isOwner();
+    }
+
+    match /concerns/{id} {
+      allow read, write: if isOwner();
+      allow read, delete: if validBoarder() && resource.data.roomId == myRoom();
+      // new concerns start as pending, only the owner marks them done
+      allow create: if validBoarder()
+        && request.resource.data.roomId == myRoom()
+        && request.resource.data.status == 'pending';
+    }
+  }
+}
