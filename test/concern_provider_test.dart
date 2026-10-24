@@ -36,4 +36,26 @@ void main() {
     provider.clear();
     expect(provider.concerns, isEmpty);
   });
+
+  test('a load still running at logout is ignored', () async {
+    final provider = ConcernProvider(db: FakeDatabaseService());
+    final load = provider.loadConcerns(roomId: 'BH01-RM2');
+    provider.clear();
+    await load;
+    expect(provider.concerns, isEmpty);
+    expect(provider.isLoading, isFalse);
+  });
+
+  test('a good snapshot after a stream error clears the error', () async {
+    final db = FakeDatabaseService();
+    final provider = ConcernProvider(db: db);
+    await provider.loadConcerns();
+    db.failConcernsStream();
+    await Future<void>.delayed(Duration.zero);
+    expect(provider.errorMessage, isNotNull);
+    await db.deleteConcern('c2');
+    await Future<void>.delayed(Duration.zero);
+    expect(provider.errorMessage, isNull);
+    expect(provider.concerns.length, 2);
+  });
 }

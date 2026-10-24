@@ -16,6 +16,9 @@ class ConcernProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   StreamSubscription<List<Concern>>? _sub;
+  // each load gets a number; clear() or a newer load makes the old one
+  // stale so a slow answer can't bring back data after logout
+  int _loadCount = 0;
 
   List<Concern> get concerns => _concerns;
   bool get isLoading => _isLoading;
@@ -24,6 +27,8 @@ class ConcernProvider extends ChangeNotifier {
   // newest first, sorted here because Firestore would need an
   // extra index to sort and filter by roomId in one query
   void _setConcerns(List<Concern> list) {
+    // a good snapshot after a stream error means it works again
+    _errorMessage = null;
     _concerns = list..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     notifyListeners();
   }
@@ -31,11 +36,14 @@ class ConcernProvider extends ChangeNotifier {
   // owner: roomId null = every room.
   // boarder: only their room, the rules reject anything else
   Future<void> loadConcerns({String? roomId}) async {
+    final load = ++_loadCount;
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
     try {
-      _setConcerns(await _db.getConcerns(roomId: roomId));
+      final list = await _db.getConcerns(roomId: roomId);
+      if (load != _loadCount) return;
+      _setConcerns(list);
       _sub?.cancel();
       _sub = _db
           .concernsStream(roomId: roomId)
@@ -47,6 +55,7 @@ class ConcernProvider extends ChangeNotifier {
             },
           );
     } catch (e) {
+      if (load != _loadCount) return;
       _errorMessage = 'Could not load concerns. Please try again.';
     }
     _isLoading = false;
@@ -94,8 +103,10 @@ class ConcernProvider extends ChangeNotifier {
 
   // logout: stop listening and forget the old user's data
   void clear() {
+    _loadCount++;
     _sub?.cancel();
     _sub = null;
+    _isLoading = false;
     _concerns = [];
     _errorMessage = null;
     notifyListeners();

@@ -295,6 +295,12 @@ class FakeDatabaseService extends DatabaseService {
     return _paymentsController.stream;
   }
 
+  void failPaymentsStream() {
+    _paymentsController.addError(
+      FirebaseException(plugin: 'firestore', code: 'unavailable'),
+    );
+  }
+
   @override
   Future<String> insertPayment(Payment payment) async {
     final id = _newId();
@@ -328,6 +334,13 @@ class FakeDatabaseService extends DatabaseService {
   @override
   Stream<List<Announcement>> announcementsStream() =>
       _announcementsController.stream;
+
+  // like a Firestore listener failing for a moment (e.g. no internet)
+  void failAnnouncementsStream() {
+    _announcementsController.addError(
+      FirebaseException(plugin: 'firestore', code: 'unavailable'),
+    );
+  }
 
   @override
   Future<String> insertAnnouncement(Announcement announcement) async {
@@ -378,6 +391,12 @@ class FakeDatabaseService extends DatabaseService {
   Stream<List<Concern>> concernsStream({String? roomId}) {
     _concernsRoomId = roomId;
     return _concernsController.stream;
+  }
+
+  void failConcernsStream() {
+    _concernsController.addError(
+      FirebaseException(plugin: 'firestore', code: 'unavailable'),
+    );
   }
 
   @override
