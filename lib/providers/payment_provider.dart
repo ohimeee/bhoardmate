@@ -16,6 +16,9 @@ class PaymentProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   StreamSubscription<List<Payment>>? _sub;
+  // each load gets a number; clear() or a newer load makes the old one
+  // stale so a slow answer can't bring back data after logout
+  int _loadCount = 0;
 
   List<Payment> get payments => _payments;
   bool get isLoading => _isLoading;
@@ -33,6 +36,8 @@ class PaymentProvider extends ChangeNotifier {
   // newest month first, then by room. sorted here like concerns
   // so Firestore doesn't need an extra index
   void _setPayments(List<Payment> list) {
+    // a good snapshot after a stream error means it works again
+    _errorMessage = null;
     _payments = list
       ..sort((a, b) {
         final byMonth = b.month.compareTo(a.month);
@@ -45,11 +50,14 @@ class PaymentProvider extends ChangeNotifier {
   // owner: roomId null = every room.
   // boarder: only their room, the rules reject anything else
   Future<void> loadPayments({String? roomId}) async {
+    final load = ++_loadCount;
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
     try {
-      _setPayments(await _db.getPayments(roomId: roomId));
+      final list = await _db.getPayments(roomId: roomId);
+      if (load != _loadCount) return;
+      _setPayments(list);
       _sub?.cancel();
       _sub = _db
           .paymentsStream(roomId: roomId)
@@ -61,6 +69,7 @@ class PaymentProvider extends ChangeNotifier {
             },
           );
     } catch (e) {
+      if (load != _loadCount) return;
       _errorMessage = 'Could not load payments. Please try again.';
     }
     _isLoading = false;
@@ -117,8 +126,10 @@ class PaymentProvider extends ChangeNotifier {
 
   // logout: stop listening and forget the old user's data
   void clear() {
+    _loadCount++;
     _sub?.cancel();
     _sub = null;
+    _isLoading = false;
     _payments = [];
     _errorMessage = null;
     notifyListeners();
