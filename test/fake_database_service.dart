@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bhoardmate/models/announcement.dart';
 import 'package:bhoardmate/models/owner.dart';
 import 'package:bhoardmate/models/room.dart';
 import 'package:bhoardmate/services/database_service.dart';
@@ -50,12 +51,48 @@ class FakeDatabaseService extends DatabaseService {
     const Room(id: 'BH01-RM4', accessCode: '4444', monthlyRent: 2500),
   ];
 
+  List<Announcement> announcements = [
+    const Announcement(
+      id: 'a1',
+      title: 'Water interruption',
+      message:
+          'No water on October 12 from 8 AM to 3 PM because of pipe repairs. Please store water ahead.',
+      eventDate: '2026-10-12',
+      createdAt: '2026-10-03T09:00:00.000',
+    ),
+    const Announcement(
+      id: 'a2',
+      title: 'Electricity rate increase',
+      message:
+          'The electricity rate goes up to 12 pesos per kWh this month. Please use appliances wisely.',
+      createdAt: '2026-10-05T14:30:00.000',
+    ),
+    const Announcement(
+      id: 'a3',
+      title: 'Pest control',
+      message:
+          'Pest control for all rooms on October 20. Please keep food covered and be available that day.',
+      eventDate: '2026-10-20',
+      createdAt: '2026-10-06T10:15:00.000',
+    ),
+  ];
+
+  // new documents get ids like x1, x2 (Firestore makes random ones)
+  int _lastId = 0;
+
+  String _newId() {
+    _lastId++;
+    return 'x$_lastId';
+  }
+
   // test-only password, the real one is not in the repo
   final String password = 'admin123';
 
   final _roomsController = StreamController<List<Room>>.broadcast();
   final _ownerController = StreamController<Owner?>.broadcast();
   final _codesController = StreamController<Map<String, String>>.broadcast();
+  final _announcementsController =
+      StreamController<List<Announcement>>.broadcast();
   String? _uid;
   String? _roomId;
 
@@ -160,5 +197,57 @@ class FakeDatabaseService extends DatabaseService {
     }).toList();
     _roomsController.add(List.of(rooms));
     _codesController.add(await getAccessCodes());
+  }
+
+  // ANNOUNCEMENTS (newest first, like the real query)
+
+  List<Announcement> _sortedAnnouncements() {
+    return List.of(announcements)
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
+
+  @override
+  Future<List<Announcement>> getAnnouncements() async => _sortedAnnouncements();
+
+  @override
+  Stream<List<Announcement>> announcementsStream() =>
+      _announcementsController.stream;
+
+  // like a Firestore listener failing for a moment (e.g. no internet)
+  void failAnnouncementsStream() {
+    _announcementsController.addError(
+      FirebaseException(plugin: 'firestore', code: 'unavailable'),
+    );
+  }
+
+  @override
+  Future<String> insertAnnouncement(Announcement announcement) async {
+    final id = _newId();
+    announcements = [
+      ...announcements,
+      Announcement(
+        id: id,
+        title: announcement.title,
+        message: announcement.message,
+        eventDate: announcement.eventDate,
+        createdAt: announcement.createdAt,
+      ),
+    ];
+    _announcementsController.add(_sortedAnnouncements());
+    return id;
+  }
+
+  @override
+  Future<void> updateAnnouncement(Announcement announcement) async {
+    announcements = announcements
+        .map((a) => a.id == announcement.id ? announcement : a)
+        .toList();
+    _announcementsController.add(_sortedAnnouncements());
+  }
+
+  @override
+  Future<void> deleteAnnouncement(String id) async {
+    announcements = announcements.where((a) => a.id != id).toList();
+    _announcementsController.add(_sortedAnnouncements());
   }
 }
