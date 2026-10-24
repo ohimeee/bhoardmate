@@ -74,4 +74,21 @@ void main() {
     expect(find.text('Logged in as: BH01-RM2'), findsOneWidget);
     expect(find.text('Log in'), findsNothing);
   });
+
+  testWidgets('a reset code logs the boarder out to the login screen', (
+    tester,
+  ) async {
+    final db = FakeDatabaseService();
+    await db.signInBoarder('BH01-RM2', '2222');
+    await openLogin(tester, AuthProvider(db: db));
+    expect(find.text('Logged in as: BH01-RM2'), findsOneWidget);
+    db.revokeSession();
+    await tester.pumpAndSettle();
+    expect(find.text('Logged in as: BH01-RM2'), findsNothing);
+    expect(
+      find.text('Your access code was changed. Please log in again.'),
+      findsOneWidget,
+    );
+    expect(find.text('Log in'), findsOneWidget);
+  });
 }

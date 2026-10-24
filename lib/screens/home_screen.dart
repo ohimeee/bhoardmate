@@ -9,7 +9,6 @@ import '../widgets/balance_card.dart';
 import '../widgets/feature_button.dart';
 import 'announcements_screen.dart';
 import 'concerns_screen.dart';
-import 'login_screen.dart';
 import 'members_screen.dart';
 import 'payments_screen.dart';
 import 'rooms_screen.dart';
@@ -32,16 +31,8 @@ class HomeScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () async {
-              // wait for Firebase sign out, or the login screen
-              // would find the old account and log back in
-              await context.read<AuthProvider>().logout();
-              if (!context.mounted) return;
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-              );
-            },
+            // MainScreen opens the login screen after logout
+            onPressed: () => context.read<AuthProvider>().logout(),
           ),
         ],
       ),
