@@ -12,7 +12,9 @@ Future<void> openScreen(WidgetTester tester, AuthProvider auth) async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: auth),
-        ChangeNotifierProvider(create: (_) => AnnouncementProvider()),
+        ChangeNotifierProvider(
+          create: (_) => AnnouncementProvider(db: FakeDatabaseService()),
+        ),
       ],
       child: const MaterialApp(home: AnnouncementsScreen()),
     ),

@@ -1,90 +1,95 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../models/announcement.dart';
+import '../services/database_service.dart';
 
-// sample data for now, DatabaseService comes in #3
+// announcements from Firestore, newest first
 class AnnouncementProvider extends ChangeNotifier {
-  final List<Announcement> _all = [
-    const Announcement(
-      id: 'a1',
-      title: 'Water interruption',
-      message:
-          'No water on October 12 from 8 AM to 3 PM because of pipe repairs. Please store water ahead.',
-      eventDate: '2026-10-12',
-      createdAt: '2026-10-03T09:00:00.000',
-    ),
-    const Announcement(
-      id: 'a2',
-      title: 'Electricity rate increase',
-      message:
-          'The electricity rate goes up to 12 pesos per kWh this month. Please use appliances wisely.',
-      createdAt: '2026-10-05T14:30:00.000',
-    ),
-    const Announcement(
-      id: 'a3',
-      title: 'Pest control',
-      message:
-          'Pest control for all rooms on October 20. Please keep food covered and be available that day.',
-      eventDate: '2026-10-20',
-      createdAt: '2026-10-06T10:15:00.000',
-    ),
-  ];
+  final DatabaseService _db;
+
+  // the tests pass a fake service so they don't need Firebase
+  AnnouncementProvider({DatabaseService? db}) : _db = db ?? DatabaseService();
 
   List<Announcement> _announcements = [];
-  final bool _isLoading = false;
+  bool _isLoading = false;
   String? _errorMessage;
+  StreamSubscription<List<Announcement>>? _sub;
 
   List<Announcement> get announcements => _announcements;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  // temporary id until Firestore gives a real one
-  // counter so two quick adds never get the same id
-  int _lastId = 3;
-
-  String _nextId() {
-    _lastId++;
-    return 'a$_lastId';
-  }
-
-  // newest first
-  void _refresh() {
-    _announcements = [..._all]
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  // get the list once, then keep listening so a new announcement
+  // from the owner shows up on every boarder's phone by itself
+  Future<void> loadAnnouncements() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      _announcements = await _db.getAnnouncements();
+      _sub?.cancel();
+      _sub = _db.announcementsStream().listen(
+        (list) {
+          _announcements = list;
+          notifyListeners();
+        },
+        onError: (e) {
+          _errorMessage = 'Could not load announcements. Please try again.';
+          notifyListeners();
+        },
+      );
+    } catch (e) {
+      _errorMessage = 'Could not load announcements. Please try again.';
+    }
+    _isLoading = false;
     notifyListeners();
   }
 
-  Future<void> loadAnnouncements() async {
-    _errorMessage = null;
-    _refresh();
-  }
-
+  // the stream updates the list, these only write to Firestore
   Future<void> addAnnouncement(Announcement announcement) async {
-    _all.add(
-      Announcement(
-        id: _nextId(),
-        title: announcement.title,
-        message: announcement.message,
-        eventDate: announcement.eventDate,
-        createdAt: announcement.createdAt,
-      ),
-    );
-    _refresh();
+    try {
+      await _db.insertAnnouncement(announcement);
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Could not save the announcement. Please try again.';
+    }
+    notifyListeners();
   }
 
   Future<void> updateAnnouncement(Announcement announcement) async {
-    final index = _all.indexWhere((a) => a.id == announcement.id);
-    if (index == -1) {
-      _errorMessage = 'Announcement not found';
-      notifyListeners();
-      return;
+    try {
+      await _db.updateAnnouncement(announcement);
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Could not save the announcement. Please try again.';
     }
-    _all[index] = announcement;
-    _refresh();
+    notifyListeners();
   }
 
   Future<void> deleteAnnouncement(String id) async {
-    _all.removeWhere((a) => a.id == id);
-    _refresh();
+    try {
+      await _db.deleteAnnouncement(id);
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Could not remove the announcement. Please try again.';
+    }
+    notifyListeners();
+  }
+
+  // logout: stop listening and forget the old user's data
+  void clear() {
+    _sub?.cancel();
+    _sub = null;
+    _announcements = [];
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 }
