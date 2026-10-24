@@ -1,0 +1,211 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../models/owner.dart';
+import '../providers/auth_provider.dart';
+
+class OwnerProfileScreen extends StatefulWidget {
+  // Connect a provider action here once owner updates are supported.
+  final Future<void> Function(Owner owner)? onSave;
+  const OwnerProfileScreen({super.key, this.onSave});
+
+  @override
+  State<OwnerProfileScreen> createState() => _OwnerProfileScreenState();
+}
+
+class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _name;
+  late final TextEditingController _phone;
+  bool _editing = false;
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _name = TextEditingController();
+    _phone = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _phone.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (_saving ||
+        widget.onSave == null ||
+        !_formKey.currentState!.validate()) {
+      return;
+    }
+    final auth = context.read<AuthProvider>();
+    if (!auth.isLoggedIn || !auth.isOwner) return;
+    final owner = auth.owner;
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await widget.onSave!(
+        Owner(
+          id: owner.id,
+          email: owner.email,
+          name: _name.text.trim(),
+          contactNumber: _phone.text.trim(),
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _editing = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Profile saved.')));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = 'Could not save profile. Please try again.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final owner = auth.owner;
+    return PopScope(
+      canPop: !_saving,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFFAF6EE),
+        appBar: AppBar(
+          title: const Text('Me'),
+          backgroundColor: const Color(0xFFFDE7D3),
+        ),
+        body: !auth.isLoggedIn || !auth.isOwner
+            ? const Center(
+                child: Text('Please log in as the owner to view this profile.'),
+              )
+            : ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  const Center(
+                    child: CircleAvatar(
+                      radius: 48,
+                      backgroundColor: Color(0xFFFDE7D3),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Card(
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            owner.name,
+                            style: const TextStyle(fontSize: 22),
+                          ),
+                          const Text('Landlord / landlady'),
+                          const SizedBox(height: 16),
+                          Text('Contact: ${owner.contactNumber}'),
+                          Text('Email: ${owner.email}'),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (!_editing)
+                    Padding(
+                      padding:
+                          (Theme.of(context).cardTheme.margin ??
+                                  const EdgeInsets.all(4))
+                              .resolve(Directionality.of(context))
+                              .copyWith(top: 0, bottom: 0),
+                      child: OutlinedButton(
+                        onPressed: widget.onSave == null
+                            ? null
+                            : () {
+                                _name.text = owner.name;
+                                _phone.text = owner.contactNumber.replaceAll(
+                                  ' ',
+                                  '',
+                                );
+                                setState(() {
+                                  _editing = true;
+                                  _error = null;
+                                });
+                              },
+                        child: const Text('Edit profile'),
+                      ),
+                    ),
+                  if (widget.onSave == null)
+                    const Text('Profile editing is not available yet.'),
+                  if (_editing)
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _name,
+                            enabled: !_saving,
+                            decoration: const InputDecoration(
+                              labelText: 'Name',
+                            ),
+                            validator: (value) =>
+                                value == null || value.trim().isEmpty
+                                ? 'Name is required'
+                                : null,
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _phone,
+                            enabled: !_saving,
+                            keyboardType: TextInputType.phone,
+                            decoration: const InputDecoration(
+                              labelText: 'Contact number',
+                            ),
+                            validator: (value) =>
+                                value == null ||
+                                    !RegExp(r'^\d+$').hasMatch(value.trim())
+                                ? 'Enter a phone number using digits only'
+                                : null,
+                          ),
+                          if (_error != null)
+                            Text(
+                              _error!,
+                              style: const TextStyle(color: Color(0xFFD9534F)),
+                            ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              TextButton(
+                                onPressed: _saving
+                                    ? null
+                                    : () => setState(() => _editing = false),
+                                child: const Text('Cancel'),
+                              ),
+                              FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2E6B4F),
+                                  foregroundColor: Colors.white,
+                                ),
+                                onPressed: _saving ? null : _save,
+                                child: Text(_saving ? 'Saving...' : 'Save'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+      ),
+    );
+  }
+}

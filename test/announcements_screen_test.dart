@@ -39,7 +39,7 @@ void main() {
     tester,
   ) async {
     final auth = AuthProvider();
-    await auth.loginOwner('owner', 'admin123');
+    await auth.loginOwner('owner@bhoardmate.app', 'admin123');
     await openScreen(tester, auth);
     await tester.tap(find.text('New announcement'));
     await tester.pumpAndSettle();
