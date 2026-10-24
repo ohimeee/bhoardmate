@@ -29,4 +29,37 @@ void main() {
     provider.clear();
     expect(provider.announcements, isEmpty);
   });
+
+  test('a load still running at logout is ignored', () async {
+    final db = FakeDatabaseService();
+    final provider = AnnouncementProvider(db: db);
+    final load = provider.loadAnnouncements();
+    provider.clear();
+    await load;
+    expect(provider.announcements, isEmpty);
+    expect(provider.isLoading, isFalse);
+    // no listener was started, so new posts don't come back either
+    await db.insertAnnouncement(
+      const Announcement(
+        title: 'Meeting',
+        message: 'House meeting in the lobby.',
+        createdAt: '2026-10-24T18:00:00.000',
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(provider.announcements, isEmpty);
+  });
+
+  test('a good snapshot after a stream error clears the error', () async {
+    final db = FakeDatabaseService();
+    final provider = AnnouncementProvider(db: db);
+    await provider.loadAnnouncements();
+    db.failAnnouncementsStream();
+    await Future<void>.delayed(Duration.zero);
+    expect(provider.errorMessage, isNotNull);
+    await db.deleteAnnouncement('a1');
+    await Future<void>.delayed(Duration.zero);
+    expect(provider.errorMessage, isNull);
+    expect(provider.announcements.length, 2);
+  });
 }
