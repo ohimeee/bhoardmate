@@ -300,6 +300,12 @@ class FakeDatabaseService extends DatabaseService {
     return _concernsController.stream;
   }
 
+  void failConcernsStream() {
+    _concernsController.addError(
+      FirebaseException(plugin: 'firestore', code: 'unavailable'),
+    );
+  }
+
   @override
   Future<String> insertConcern(Concern concern) async {
     final id = _newId();
