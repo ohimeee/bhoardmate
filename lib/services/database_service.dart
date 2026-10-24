@@ -128,6 +128,18 @@ class DatabaseService {
     return codes;
   }
 
+  // same as getAccessCodes but live, so a reset on another
+  // owner phone shows the new code here too
+  Stream<Map<String, String>> accessCodesStream() {
+    return _db.collection('roomCodes').snapshots().map((snapshot) {
+      final codes = <String, String>{};
+      for (final doc in snapshot.docs) {
+        codes[doc.id] = doc.data()['accessCode'] as String;
+      }
+      return codes;
+    });
+  }
+
   Future<void> insertRoom(Room room) async {
     final data = room.toMap();
     data.remove('accessCode');

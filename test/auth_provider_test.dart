@@ -54,4 +54,32 @@ void main() {
     expect(auth.rooms, isEmpty);
     expect(auth.owner, isNull);
   });
+
+  test('a reset code on another owner phone shows up here', () async {
+    final db = FakeDatabaseService();
+    final auth = AuthProvider(db: db);
+    await auth.loginOwner('owner@bhoardmate.app', 'admin123');
+    // another phone writes to Firestore directly
+    await db.resetAccessCode('BH01-RM3', '7777');
+    await Future<void>.delayed(Duration.zero);
+    expect(auth.rooms[2].accessCode, '7777');
+    expect(auth.rooms[2].boarderName, isNull);
+  });
+
+  test('revoked boarder session logs out and clears rooms', () async {
+    final db = FakeDatabaseService();
+    final auth = AuthProvider(db: db);
+    await auth.loginBoarder('BH01-RM2', '2222');
+    expect(auth.rooms, isNotEmpty);
+    db.revokeSession();
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(auth.isLoggedIn, isFalse);
+    expect(auth.rooms, isEmpty);
+    expect(auth.owner, isNull);
+    expect(
+      auth.errorMessage,
+      'Your access code was changed. Please log in again.',
+    );
+  });
 }
