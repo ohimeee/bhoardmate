@@ -63,6 +63,7 @@ class _MainScreenState extends State<MainScreen> {
         if (!mounted) return;
         // forget the old user's data before the next login
         context.read<AnnouncementProvider>().clear();
+        context.read<ConcernProvider>().clear();
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
