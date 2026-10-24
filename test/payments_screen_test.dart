@@ -1,3 +1,4 @@
+import 'package:bhoardmate/models/payment.dart';
 import 'package:bhoardmate/providers/auth_provider.dart';
 import 'package:bhoardmate/providers/payment_provider.dart';
 import 'package:bhoardmate/screens/payments_screen.dart';
@@ -8,12 +9,16 @@ import 'package:provider/provider.dart';
 import 'fake_database_service.dart';
 
 // MainScreen loads the payments in the app, so the test loads them here
-Future<void> openScreen(WidgetTester tester, AuthProvider auth) async {
+Future<void> openScreen(
+  WidgetTester tester,
+  AuthProvider auth, [
+  FakeDatabaseService? db,
+]) async {
   // tall screen so every bill card is built
   tester.view.physicalSize = const Size(800, 3000);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
-  final payments = PaymentProvider(db: FakeDatabaseService());
+  final payments = PaymentProvider(db: db ?? FakeDatabaseService());
   await payments.loadPayments(roomId: auth.isOwner ? null : auth.currentRoomId);
   await tester.pumpWidget(
     MultiProvider(
@@ -50,6 +55,14 @@ void main() {
     await tester.enterText(find.byType(TextField).at(2), '2');
     await tester.pump();
     expect(find.text('Each boarder pays ₱ 300.00'), findsOneWidget);
+
+    // "Infinity" parses as a double, and a huge kWh x rate overflows
+    await tester.enterText(find.byType(TextField).at(0), 'Infinity');
+    await tester.pump();
+    expect(find.text('Enter kWh, rate and boarders'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).at(0), '1e308');
+    await tester.pump();
+    expect(find.text('Enter kWh, rate and boarders'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -103,6 +116,76 @@ void main() {
     await tester.tap(find.text('Remove'));
     await tester.pumpAndSettle();
     expect(find.text('November 2026'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('editing keeps the cents and rejects NaN and Infinity', (
+    tester,
+  ) async {
+    final db = FakeDatabaseService();
+    db.payments = [
+      const Payment(
+        id: 'p9',
+        roomId: 'BH01-RM3',
+        month: '2026-11',
+        roomRent: 2500.5,
+        electricity: 760.125,
+        water: 150.75,
+        dueDate: '2026-11-10',
+      ),
+    ];
+    final auth = AuthProvider(db: FakeDatabaseService());
+    await auth.loginOwner('owner@bhoardmate.app', 'admin123');
+    await openScreen(tester, auth, db);
+
+    await tester.tap(find.byTooltip('Edit bill'));
+    await tester.pumpAndSettle();
+    expect(find.text('2500.5'), findsOneWidget);
+    expect(find.text('760.125'), findsOneWidget);
+    expect(find.text('150.75'), findsOneWidget);
+
+    // saving without changes keeps every amount
+    await tester.tap(find.text('Save bill'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bill saved.'), findsOneWidget);
+    expect(db.payments.first.roomRent, 2500.5);
+    expect(db.payments.first.electricity, 760.125);
+    expect(db.payments.first.water, 150.75);
+
+    await tester.tap(find.byTooltip('Edit bill'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).at(1), 'Infinity');
+    await tester.enterText(find.byType(TextFormField).at(3), 'NaN');
+    await tester.tap(find.text('Save bill'));
+    await tester.pumpAndSettle();
+    expect(find.text('Enter a valid amount'), findsNWidgets(2));
+    expect(db.payments.first.water, 150.75);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a failed refresh shows the error above the old bills', (
+    tester,
+  ) async {
+    final db = FakeDatabaseService();
+    final auth = AuthProvider(db: FakeDatabaseService());
+    await auth.loginOwner('owner@bhoardmate.app', 'admin123');
+    await openScreen(tester, auth, db);
+
+    db.failPaymentsStream();
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Could not load payments. Please try again.'),
+      findsOneWidget,
+    );
+    expect(find.text('October 2026'), findsWidgets);
+
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Could not load payments. Please try again.'),
+      findsNothing,
+    );
+    expect(find.text('October 2026'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 }
