@@ -242,6 +242,27 @@ class PaymentsScreen extends StatelessWidget {
             amount: provider.outstandingBalance,
             subtitle: nextDue == null ? 'All paid' : 'Next due: $nextDue',
           ),
+          // a failed refresh keeps the old bills, so say they may be old
+          if (provider.errorMessage != null) ...[
+            const SizedBox(height: 12),
+            Card(
+              color: AppColors.unpaid,
+              child: ListTile(
+                leading: const Icon(
+                  Icons.error_outline,
+                  color: AppColors.unpaidText,
+                ),
+                title: Text(
+                  provider.errorMessage!,
+                  style: const TextStyle(color: AppColors.unpaidText),
+                ),
+                trailing: TextButton(
+                  onPressed: () => _reload(context),
+                  child: const Text('Retry'),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () => _openSolver(context),
