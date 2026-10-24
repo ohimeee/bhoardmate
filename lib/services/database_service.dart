@@ -9,10 +9,19 @@ import '../models/room.dart';
 
 // the only class that talks to Firebase, providers call this
 class DatabaseService {
-  final _db = FirebaseFirestore.instance;
-  final _auth = FirebaseAuth.instance;
+  // getters (not fields) so the fake service in the tests can be
+  // created without starting Firebase
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
 
   String? get currentUid => _auth.currentUser?.uid;
+
+  // Firebase error code like 'permission-denied',
+  // the providers turn it into a message for the screen
+  String errorCode(Object e) {
+    if (e is FirebaseException) return e.code;
+    return 'unknown';
+  }
 
   // LOGIN
 
