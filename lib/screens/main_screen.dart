@@ -32,7 +32,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    // load sample data once after login
+    // load data once after login
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
       // owner sees every room, boarder only their own
@@ -62,6 +62,7 @@ class _MainScreenState extends State<MainScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         // forget the old user's data before the next login
+        context.read<PaymentProvider>().clear();
         context.read<AnnouncementProvider>().clear();
         context.read<ConcernProvider>().clear();
         Navigator.pushAndRemoveUntil(
