@@ -12,6 +12,15 @@ import 'payments_screen.dart';
 import 'rooms_screen.dart';
 
 class HomeScreen extends StatelessWidget {
+  // Edit each Home card's background color here.
+  static const cardColors = <String, Color>{
+    'Payments': Colors.white,
+    'Announcements': Color(0xFFDCEBFA),
+    'Members': Color(0xFFFDE7D3),
+    'Concerns': Color(0xFFFADCDC),
+    'Rooms': Color(0xFFE7E2F8),
+  };
+
   const HomeScreen({super.key});
 
   @override
@@ -63,6 +72,7 @@ class HomeScreen extends StatelessWidget {
                 mainAxisSpacing: 12,
                 children: buttons.entries.map((entry) {
                   return Card(
+                    color: cardColors[entry.key],
                     elevation: 3,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
