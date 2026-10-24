@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bhoardmate/models/announcement.dart';
+import 'package:bhoardmate/models/concern.dart';
 import 'package:bhoardmate/models/owner.dart';
 import 'package:bhoardmate/models/room.dart';
 import 'package:bhoardmate/services/database_service.dart';
@@ -77,6 +78,31 @@ class FakeDatabaseService extends DatabaseService {
     ),
   ];
 
+  List<Concern> concerns = [
+    const Concern(
+      id: 'c1',
+      roomId: 'BH01-RM2',
+      title: 'Leaking faucet',
+      description: 'The bathroom faucet keeps dripping even when closed.',
+      createdAt: '2026-10-04T08:20:00.000',
+    ),
+    const Concern(
+      id: 'c2',
+      roomId: 'BH01-RM1',
+      title: 'Broken hallway light',
+      description: 'The light near the stairs does not turn on anymore.',
+      status: 'done',
+      createdAt: '2026-10-01T19:45:00.000',
+    ),
+    const Concern(
+      id: 'c3',
+      roomId: 'BH01-RM3',
+      title: 'Clogged sink',
+      description: 'Water drains very slowly in the kitchen sink.',
+      createdAt: '2026-10-06T07:10:00.000',
+    ),
+  ];
+
   // new documents get ids like x1, x2 (Firestore makes random ones)
   int _lastId = 0;
 
@@ -93,6 +119,9 @@ class FakeDatabaseService extends DatabaseService {
   final _codesController = StreamController<Map<String, String>>.broadcast();
   final _announcementsController =
       StreamController<List<Announcement>>.broadcast();
+  final _concernsController = StreamController<List<Concern>>.broadcast();
+  // roomId the concerns stream was opened with (null = owner)
+  String? _concernsRoomId;
   String? _uid;
   String? _roomId;
 
@@ -249,5 +278,51 @@ class FakeDatabaseService extends DatabaseService {
   Future<void> deleteAnnouncement(String id) async {
     announcements = announcements.where((a) => a.id != id).toList();
     _announcementsController.add(_sortedAnnouncements());
+  }
+
+  // CONCERNS (roomId null = every room, like the owner's query)
+
+  List<Concern> _concernsFor(String? roomId) {
+    return concerns.where((c) => roomId == null || c.roomId == roomId).toList();
+  }
+
+  void _concernsChanged() {
+    _concernsController.add(_concernsFor(_concernsRoomId));
+  }
+
+  @override
+  Future<List<Concern>> getConcerns({String? roomId}) async =>
+      _concernsFor(roomId);
+
+  @override
+  Stream<List<Concern>> concernsStream({String? roomId}) {
+    _concernsRoomId = roomId;
+    return _concernsController.stream;
+  }
+
+  void failConcernsStream() {
+    _concernsController.addError(
+      FirebaseException(plugin: 'firestore', code: 'unavailable'),
+    );
+  }
+
+  @override
+  Future<String> insertConcern(Concern concern) async {
+    final id = _newId();
+    concerns = [...concerns, concern.copyWith(id: id)];
+    _concernsChanged();
+    return id;
+  }
+
+  @override
+  Future<void> updateConcern(Concern concern) async {
+    concerns = concerns.map((c) => c.id == concern.id ? concern : c).toList();
+    _concernsChanged();
+  }
+
+  @override
+  Future<void> deleteConcern(String id) async {
+    concerns = concerns.where((c) => c.id != id).toList();
+    _concernsChanged();
   }
 }
