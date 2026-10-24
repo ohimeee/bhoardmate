@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../app_theme.dart';
 import '../models/announcement.dart';
 import '../providers/announcement_provider.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/empty_state.dart';
 
 class AnnouncementsScreen extends StatefulWidget {
   const AnnouncementsScreen({super.key});
@@ -47,7 +49,6 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
       barrierDismissible: false,
       builder: (_) => _AnnouncementDialog(announcement: announcement),
     );
-    if (!mounted) return;
   }
 
   Future<void> _remove(Announcement announcement) async {
@@ -102,11 +103,10 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
     final announcements = [...provider.announcements]
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF6EE),
       appBar: AppBar(
         title: const Text('Announcements'),
-        backgroundColor: const Color(0xFFDCEBFA),
-        foregroundColor: Colors.black87,
+        backgroundColor: AppColors.announcements,
+        foregroundColor: AppColors.announcementsDark,
         actions: [
           IconButton(
             tooltip: 'Refresh announcements',
@@ -117,8 +117,6 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
       ),
       floatingActionButton: auth.isLoggedIn && auth.isOwner
           ? FloatingActionButton.extended(
-              backgroundColor: const Color(0xFFDCEBFA),
-              foregroundColor: Colors.black,
               onPressed: loading || _busy || error != null
                   ? null
                   : () => _edit(),
@@ -131,56 +129,19 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
               child: Text('Please log in again to view announcements.'),
             )
           : error != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(error, textAlign: TextAlign.center),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF2E6B4F),
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: loading || _busy ? null : _load,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
+          ? EmptyState(
+              icon: Icons.error_outline,
+              title: error,
+              buttonLabel: 'Retry',
+              onPressed: loading || _busy ? null : _load,
             )
           : loading
           ? const Center(child: CircularProgressIndicator())
           : announcements.isEmpty
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.campaign_outlined,
-                      size: 48,
-                      color: Color(0xFF5B5BD6),
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'No announcements yet',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Boarding house updates will appear here.',
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
+          ? const EmptyState(
+              icon: Icons.campaign_outlined,
+              title: 'No announcements yet',
+              message: 'Boarding house updates will appear here.',
             )
           : ListView.builder(
               // Johnmarc adds the holiday section in #15.
@@ -189,12 +150,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
               itemBuilder: (context, index) {
                 final announcement = announcements[index];
                 return Card(
-                  color: Colors.white,
-                  elevation: 3,
                   margin: const EdgeInsets.only(bottom: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -219,7 +175,6 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                             children: [
                               IconButton(
                                 tooltip: 'Edit announcement',
-                                color: Colors.black,
                                 onPressed: _busy || announcement.id == null
                                     ? null
                                     : () => _edit(announcement),
@@ -227,7 +182,6 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                               ),
                               IconButton(
                                 tooltip: 'Remove announcement',
-                                color: Colors.black,
                                 onPressed: _busy || announcement.id == null
                                     ? null
                                     : () => _remove(announcement),
@@ -419,17 +373,10 @@ class _AnnouncementDialogState extends State<_AnnouncementDialog> {
         ),
         actions: [
           TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF2E6B4F),
-            ),
             onPressed: _saving ? null : () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF2E6B4F),
-              foregroundColor: Colors.white,
-            ),
             onPressed: _saving ? null : _save,
             child: Text(_saving ? 'Saving...' : 'Save'),
           ),

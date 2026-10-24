@@ -2,7 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../app_theme.dart';
 import '../providers/payment_provider.dart';
+import '../widgets/status_chip.dart';
 
 class PaymentsScreen extends StatelessWidget {
   const PaymentsScreen({super.key});
@@ -12,7 +14,11 @@ class PaymentsScreen extends StatelessWidget {
     final payments = context.watch<PaymentProvider>().payments;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Payments')),
+      appBar: AppBar(
+        title: const Text('Payments'),
+        backgroundColor: AppColors.payments,
+        foregroundColor: AppColors.paymentsDark,
+      ),
       body: ListView.builder(
         itemCount: payments.length,
         itemBuilder: (context, index) {
@@ -20,13 +26,7 @@ class PaymentsScreen extends StatelessWidget {
           return ListTile(
             title: Text('${payment.month} - ${payment.roomId}'),
             subtitle: Text('PHP ${payment.total.toStringAsFixed(2)}'),
-            trailing: Text(
-              payment.isPaid ? 'Paid' : 'Unpaid',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: payment.isPaid ? Colors.green : Colors.red,
-              ),
-            ),
+            trailing: StatusChip(status: payment.isPaid ? 'paid' : 'unpaid'),
           );
         },
       ),

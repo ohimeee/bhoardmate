@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../app_theme.dart';
 import '../models/owner.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/info_card.dart';
 
 class OwnerProfileScreen extends StatefulWidget {
   // Connect a provider action here once owner updates are supported.
@@ -81,10 +83,10 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
     return PopScope(
       canPop: !_saving,
       child: Scaffold(
-        backgroundColor: const Color(0xFFFAF6EE),
         appBar: AppBar(
           title: const Text('Me'),
-          backgroundColor: const Color(0xFFFDE7D3),
+          backgroundColor: AppColors.members,
+          foregroundColor: AppColors.membersDark,
         ),
         body: !auth.isLoggedIn || !auth.isOwner
             ? const Center(
@@ -99,53 +101,52 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                   const Center(
                     child: CircleAvatar(
                       radius: 48,
-                      backgroundColor: Color(0xFFFDE7D3),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Card(
-                    color: Colors.white,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            owner.name,
-                            style: const TextStyle(fontSize: 22),
-                          ),
-                          const Text('Landlord / landlady'),
-                          const SizedBox(height: 16),
-                          Text('Contact: ${owner.contactNumber}'),
-                          Text('Email: ${owner.email}'),
-                        ],
+                      backgroundColor: AppColors.members,
+                      child: Icon(
+                        Icons.person,
+                        size: 48,
+                        color: AppColors.membersDark,
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
+                  Text(
+                    owner.name,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Text(
+                    'Landlord / landlady',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.textLight),
+                  ),
+                  const SizedBox(height: 24),
+                  InfoCard(
+                    rows: {
+                      'Contact': owner.contactNumber,
+                      'Email': owner.email,
+                    },
+                  ),
+                  const SizedBox(height: 12),
                   if (!_editing)
-                    Padding(
-                      padding:
-                          (Theme.of(context).cardTheme.margin ??
-                                  const EdgeInsets.all(4))
-                              .resolve(Directionality.of(context))
-                              .copyWith(top: 0, bottom: 0),
-                      child: OutlinedButton(
-                        onPressed: widget.onSave == null
-                            ? null
-                            : () {
-                                _name.text = owner.name;
-                                _phone.text = owner.contactNumber.replaceAll(
-                                  ' ',
-                                  '',
-                                );
-                                setState(() {
-                                  _editing = true;
-                                  _error = null;
-                                });
-                              },
-                        child: const Text('Edit profile'),
-                      ),
+                    OutlinedButton(
+                      onPressed: widget.onSave == null
+                          ? null
+                          : () {
+                              _name.text = owner.name;
+                              _phone.text = owner.contactNumber.replaceAll(
+                                ' ',
+                                '',
+                              );
+                              setState(() {
+                                _editing = true;
+                                _error = null;
+                              });
+                            },
+                      child: const Text('Edit profile'),
                     ),
                   if (widget.onSave == null)
                     const Text('Profile editing is not available yet.'),
@@ -194,10 +195,6 @@ class _OwnerProfileScreenState extends State<OwnerProfileScreen> {
                                 child: const Text('Cancel'),
                               ),
                               FilledButton(
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: const Color(0xFF2E6B4F),
-                                  foregroundColor: Colors.white,
-                                ),
                                 onPressed: _saving ? null : _save,
                                 child: Text(_saving ? 'Saving...' : 'Save'),
                               ),

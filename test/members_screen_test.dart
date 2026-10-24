@@ -21,7 +21,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Me'), findsOneWidget);
     expect(find.text('Juan Dela Cruz'), findsOneWidget);
-    expect(find.text('Edit Profile'), findsOneWidget);
+    expect(find.text('Edit profile'), findsOneWidget);
     expect(find.text('Maria Santos'), findsNothing);
   });
   testWidgets('owner opens room details without profile editing', (
@@ -40,7 +40,7 @@ void main() {
     await tester.tap(find.text('Maria Santos'));
     await tester.pumpAndSettle();
     expect(find.text('Room ID'), findsOneWidget);
-    expect(find.text('Edit Profile'), findsNothing);
+    expect(find.text('Edit profile'), findsNothing);
     expect(find.text('Monthly rent'), findsOneWidget);
     expect(find.text('\u20B1 2500.00'), findsOneWidget);
     expect(find.text('Landlord'), findsNothing);
@@ -62,7 +62,7 @@ void main() {
     await tester.tap(find.text('Maria Santos'));
     await tester.pumpAndSettle();
     expect(find.text('Maria Santos'), findsOneWidget);
-    expect(find.text('Edit Profile'), findsNothing);
+    expect(find.text('Edit profile'), findsNothing);
     expect(find.byType(TextFormField), findsNothing);
     expect(auth.rooms[0].boarderName, 'Maria Santos');
   });
@@ -81,7 +81,7 @@ void main() {
     expect(find.text('Maria Santos'), findsOneWidget);
     await tester.tap(find.text('BH01-RM2 (You)'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Edit Profile'));
+    await tester.tap(find.text('Edit profile'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField).at(0), '');
     await tester.enterText(find.byType(TextFormField).at(1), 'abc');

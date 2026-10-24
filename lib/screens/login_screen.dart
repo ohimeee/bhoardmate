@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../app_theme.dart';
 import '../providers/auth_provider.dart';
 import 'main_screen.dart';
 
@@ -88,14 +89,10 @@ class _LoginScreenState extends State<LoginScreen> {
     final error = context.watch<AuthProvider>().errorMessage;
 
     if (_checking) {
-      return const Scaffold(
-        backgroundColor: Color(0xFFFAF6EE),
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF6EE),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -108,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Icon(
                     Icons.house_rounded,
                     size: 72,
-                    color: Color(0xFF2E6B4F),
+                    color: AppColors.primary,
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -121,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? 'Owner login'
                         : 'Log in with your room ID and access code',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey.shade700),
+                    style: const TextStyle(color: AppColors.textLight),
                   ),
                   const SizedBox(height: 32),
                   if (_ownerMode) ...[
@@ -202,14 +199,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text(
                       error,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Color(0xFFD9534F)),
+                      style: const TextStyle(color: AppColors.unpaidText),
                     ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: _loading ? null : _login,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E6B4F),
-                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     child: _loading

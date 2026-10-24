@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../app_theme.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/empty_state.dart';
 import 'member_detail_screen.dart';
 import 'owner_profile_screen.dart';
 
@@ -62,38 +64,33 @@ class _MembersScreenState extends State<MembersScreen> {
         )
         .toList();
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF6EE),
       appBar: AppBar(
         title: const Text('Members'),
-        backgroundColor: const Color(0xFFFDE7D3),
+        backgroundColor: AppColors.members,
+        foregroundColor: AppColors.membersDark,
       ),
       body: !auth.isLoggedIn
           ? const Center(child: Text('Please log in to view members.'))
           : _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(_error!),
-                  TextButton(onPressed: _load, child: const Text('Retry')),
-                ],
-              ),
+          ? EmptyState(
+              icon: Icons.error_outline,
+              title: _error!,
+              buttonLabel: 'Retry',
+              onPressed: _load,
             )
           : rooms.isEmpty
-          ? const Center(child: Text('No members yet'))
+          ? const EmptyState(
+              icon: Icons.people_outline,
+              title: 'No members yet',
+            )
           : ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: rooms.length,
               itemBuilder: (context, index) {
                 final room = rooms[index];
                 return Card(
-                  color: Colors.white,
-                  elevation: 3,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
                   child: ListTile(
                     title: Text(
                       room.id == auth.currentRoomId
