@@ -38,6 +38,25 @@ Future<void> openScreen(
 }
 
 void main() {
+  testWidgets('finite bill amounts cannot overflow the total', (tester) async {
+    final db = FakeDatabaseService();
+    final auth = AuthProvider(db: db);
+    await auth.loginOwner('owner@bhoardmate.app', 'admin123');
+    await openScreen(tester, auth, db);
+    await tester.tap(find.byTooltip('Edit bill').first);
+    await tester.pumpAndSettle();
+    final original = db.payments.first.roomRent;
+    await tester.enterText(find.byType(TextFormField).at(1), '1e308');
+    await tester.enterText(find.byType(TextFormField).at(2), '1e308');
+    await tester.tap(find.text('Save bill'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('The bill total is too large. Check the amounts.'),
+      findsOneWidget,
+    );
+    expect(db.payments.first.roomRent, original);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('boarder sees own bills, breakdown and the solver', (
     tester,
   ) async {

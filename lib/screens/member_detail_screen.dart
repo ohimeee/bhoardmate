@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../app_theme.dart';
 import '../models/room.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/empty_state.dart';
 import '../widgets/info_card.dart';
 
 class MemberDetailScreen extends StatelessWidget {
@@ -28,7 +29,11 @@ class MemberDetailScreen extends StatelessWidget {
       body: !allowed
           ? const Center(child: Text('Please log in to view this profile.'))
           : current == null
-          ? const Center(child: Text('This room is no longer available.'))
+          ? const EmptyState(
+              icon: Icons.person_off_outlined,
+              title: 'This room is no longer available.',
+              message: 'Go back to Members to view the available rooms.',
+            )
           : ListView(
               padding: const EdgeInsets.all(24),
               children: [
@@ -100,8 +105,8 @@ class MemberDetailScreen extends StatelessWidget {
                   InfoCard(
                     title: 'Landlord',
                     rows: {
-                      'Name': auth.owner?.name ?? '',
-                      'Contact': auth.owner?.contactNumber ?? '',
+                      'Name': _display(auth.owner?.name),
+                      'Contact': _display(auth.owner?.contactNumber),
                     },
                   ),
                 ],

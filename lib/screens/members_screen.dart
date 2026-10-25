@@ -44,6 +44,7 @@ class _MembersScreenState extends State<MembersScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final error = _error;
     if (widget.showOwnProfile && auth.isLoggedIn && auth.isOwner) {
       return OwnerProfileScreen(onSave: auth.updateOwner);
     }
@@ -51,7 +52,7 @@ class _MembersScreenState extends State<MembersScreen> {
       final ownRooms = auth.rooms.where(
         (room) => room.id == auth.currentRoomId,
       );
-      if (ownRooms.isNotEmpty && !_loading && _error == null) {
+      if (ownRooms.isNotEmpty && !_loading && error == null) {
         return MemberDetailScreen(room: ownRooms.first);
       }
     }
@@ -73,10 +74,18 @@ class _MembersScreenState extends State<MembersScreen> {
           ? const Center(child: Text('Please log in to view members.'))
           : _loading
           ? const Center(child: CircularProgressIndicator())
-          : _error != null
+          : error != null
           ? EmptyState(
               icon: Icons.error_outline,
-              title: _error!,
+              title: error,
+              buttonLabel: 'Retry',
+              onPressed: _load,
+            )
+          : widget.showOwnProfile
+          ? EmptyState(
+              icon: Icons.person_off_outlined,
+              title: 'Your room is no longer available.',
+              message: 'Try again or ask the owner to check your room access.',
               buttonLabel: 'Retry',
               onPressed: _load,
             )
@@ -84,6 +93,7 @@ class _MembersScreenState extends State<MembersScreen> {
           ? const EmptyState(
               icon: Icons.people_outline,
               title: 'No members yet',
+              message: 'Members will appear here when rooms are added.',
             )
           : ListView.builder(
               padding: const EdgeInsets.all(16),

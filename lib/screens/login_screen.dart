@@ -134,7 +134,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (value == null || value.trim().isEmpty) {
                           return 'Email is required';
                         }
-                        if (!value.contains('@')) return 'Enter a valid email';
+                        if (!RegExp(
+                          r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+                        ).hasMatch(value.trim())) {
+                          return 'Enter a valid email';
+                        }
                         return null;
                       },
                     ),

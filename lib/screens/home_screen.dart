@@ -9,6 +9,7 @@ import '../providers/holiday_provider.dart';
 import '../providers/payment_provider.dart';
 import '../widgets/balance_card.dart';
 import '../widgets/error_card.dart';
+import '../widgets/empty_state.dart';
 import '../widgets/feature_button.dart';
 import 'announcements_screen.dart';
 import 'concerns_screen.dart';
@@ -212,9 +213,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           if (latest.isEmpty && news.errorMessage == null)
-            const Text(
-              'No announcements yet.',
-              style: TextStyle(color: AppColors.textLight),
+            const EmptyState(
+              icon: Icons.campaign_outlined,
+              title: 'No announcements yet.',
             ),
           for (final announcement in latest)
             Card(

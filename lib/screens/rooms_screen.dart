@@ -50,6 +50,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final allowed = auth.isLoggedIn && auth.isOwner;
+    final error = _error;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Rooms'),
@@ -59,7 +60,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
       floatingActionButton: allowed
           ? FloatingActionButton.extended(
               heroTag: 'rooms-add-room',
-              onPressed: _loading || _error != null
+              onPressed: _loading || error != null
                   ? null
                   : () => showDialog<void>(
                       context: context,
@@ -74,10 +75,10 @@ class _RoomsScreenState extends State<RoomsScreen> {
           ? const Center(child: Text('Only the owner can manage rooms.'))
           : _loading
           ? const Center(child: CircularProgressIndicator())
-          : _error != null
+          : error != null
           ? EmptyState(
               icon: Icons.error_outline,
-              title: _error!,
+              title: error,
               buttonLabel: 'Retry',
               onPressed: _load,
             )

@@ -86,6 +86,8 @@ void main() {
     await openScreen(tester, auth);
     await tester.tap(find.text('New announcement'));
     await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).at(0), '   ');
+    await tester.enterText(find.byType(TextFormField).at(1), '   ');
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
     expect(find.text('Title is required'), findsOneWidget);
