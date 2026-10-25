@@ -1,48 +1,61 @@
 import 'package:flutter/foundation.dart';
 
 import '../models/holiday.dart';
+import '../services/holiday_service.dart';
 
-// sample data for now, real API (HolidayService) comes in #14
+// PH public holidays from the Nager.Date API (News tab, due dates)
 class HolidayProvider extends ChangeNotifier {
+  final HolidayService _service;
+
+  // the tests pass a fake service so they don't need internet
+  HolidayProvider({HolidayService? service})
+    : _service = service ?? HolidayService();
+
   List<Holiday> _holidays = [];
-  final bool _isLoading = false;
+  bool _isLoading = false;
   String? _errorMessage;
-  final bool _isOffline = false;
+  // true = no internet, showing the list saved last time
+  bool _isOffline = false;
 
   List<Holiday> get holidays => _holidays;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isOffline => _isOffline;
 
+  // from today on, for the News tab
+  List<Holiday> get upcomingHolidays {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return _holidays.where((h) => !h.date.isBefore(today)).toList();
+  }
+
+  // this year and next year, so a December due date can move into January
   Future<void> loadHolidays() async {
-    _holidays = [
-      Holiday(
-        date: DateTime(2026, 11, 1),
-        localName: 'Araw ng mga Santo',
-        name: "All Saints' Day",
-      ),
-      Holiday(
-        date: DateTime(2026, 11, 30),
-        localName: 'Araw ni Bonifacio',
-        name: 'Bonifacio Day',
-      ),
-      Holiday(
-        date: DateTime(2026, 12, 8),
-        localName: 'Kapistahan ng Immaculada Concepcion',
-        name: 'Feast of the Immaculate Conception',
-      ),
-      Holiday(
-        date: DateTime(2026, 12, 25),
-        localName: 'Araw ng Pasko',
-        name: 'Christmas Day',
-      ),
-      Holiday(
-        date: DateTime(2026, 12, 30),
-        localName: 'Araw ni Rizal',
-        name: 'Rizal Day',
-      ),
-    ];
+    _isLoading = true;
     _errorMessage = null;
+    notifyListeners();
+    final year = DateTime.now().year;
+    try {
+      final thisYear = await _service.fetchHolidays(year);
+      final nextYear = await _service.fetchHolidays(year + 1);
+      _holidays = [...thisYear, ...nextYear];
+      _isOffline = false;
+    } on HolidayException catch (e) {
+      // API failed: use the saved list if we have one
+      final saved = [
+        ...await _service.getSavedHolidays(year),
+        ...await _service.getSavedHolidays(year + 1),
+      ];
+      if (saved.isEmpty) {
+        _holidays = [];
+        _isOffline = false;
+        _errorMessage = 'Could not load holidays. ${e.message}';
+      } else {
+        _holidays = saved;
+        _isOffline = true;
+      }
+    }
+    _isLoading = false;
     notifyListeners();
   }
 }
