@@ -36,11 +36,17 @@ class FeatureButton extends StatelessWidget {
                 backgroundColor: Colors.white,
                 child: Icon(icon, color: AppColors.icon),
               ),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+              // one line: a long label like "Announcements" shrinks
+              // a little on narrow phones instead of wrapping
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],

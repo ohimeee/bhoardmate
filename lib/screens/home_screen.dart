@@ -267,12 +267,15 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 20),
           _newsSection(news),
           const SizedBox(height: 16),
-          GridView.count(
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            // wider than tall, like the wireframe
-            childAspectRatio: 1.5,
+          GridView(
+            // same tile height on every phone width (an aspect ratio made
+            // tiles too short on 360 dp phones and the label overflowed)
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              mainAxisExtent: 112,
+            ),
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             children: [
