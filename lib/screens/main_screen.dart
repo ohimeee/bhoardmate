@@ -22,13 +22,6 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    PaymentsScreen(),
-    AnnouncementsScreen(),
-    MembersScreen(showOwnProfile: true),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -73,8 +66,17 @@ class _MainScreenState extends State<MainScreen> {
       });
     }
 
+    // Home gets _onItemTapped so its Payments tile and "See all"
+    // switch tabs like the bottom nav does
+    final screens = [
+      HomeScreen(onOpenTab: _onItemTapped),
+      const PaymentsScreen(),
+      const AnnouncementsScreen(),
+      const MembersScreen(showOwnProfile: true),
+    ];
+
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _screens),
+      body: IndexedStack(index: _selectedIndex, children: screens),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,

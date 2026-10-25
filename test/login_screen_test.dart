@@ -63,7 +63,7 @@ void main() {
     await tester.enterText(find.byType(TextFormField).at(1), '2222');
     await tester.tap(find.text('Log in'));
     await tester.pumpAndSettle();
-    expect(find.text('Logged in as: BH01-RM2'), findsOneWidget);
+    expect(find.text('Hi, Juan Dela Cruz'), findsOneWidget);
   });
 
   testWidgets('owner switch logs in and opens Home', (tester) async {
@@ -87,14 +87,14 @@ void main() {
     await tester.enterText(find.byType(TextFormField).at(1), 'admin123');
     await tester.tap(find.text('Log in'));
     await tester.pumpAndSettle();
-    expect(find.text('Logged in as: Owner'), findsOneWidget);
+    expect(find.text('Hi, Mrs. Estoesta'), findsOneWidget);
   });
 
   testWidgets('saved Firebase login skips the login screen', (tester) async {
     final db = FakeDatabaseService();
     await db.signInBoarder('BH01-RM2', '2222');
     await openLogin(tester, AuthProvider(db: db));
-    expect(find.text('Logged in as: BH01-RM2'), findsOneWidget);
+    expect(find.text('Hi, Juan Dela Cruz'), findsOneWidget);
     expect(find.text('Log in'), findsNothing);
   });
 
@@ -104,10 +104,10 @@ void main() {
     final db = FakeDatabaseService();
     await db.signInBoarder('BH01-RM2', '2222');
     await openLogin(tester, AuthProvider(db: db));
-    expect(find.text('Logged in as: BH01-RM2'), findsOneWidget);
+    expect(find.text('Hi, Juan Dela Cruz'), findsOneWidget);
     db.revokeSession();
     await tester.pumpAndSettle();
-    expect(find.text('Logged in as: BH01-RM2'), findsNothing);
+    expect(find.text('Hi, Juan Dela Cruz'), findsNothing);
     expect(
       find.text('Your access code was changed. Please log in again.'),
       findsOneWidget,

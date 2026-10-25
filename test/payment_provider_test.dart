@@ -93,4 +93,22 @@ void main() {
     expect(provider.errorMessage, isNull);
     expect(provider.payments.length, 3);
   });
+
+  test('next due date, months and rent collected per month', () async {
+    final provider = PaymentProvider(db: FakeDatabaseService());
+    await provider.loadPayments();
+    expect(provider.nextDueDate, '2026-10-10');
+    expect(provider.months, ['2026-10', '2026-09']);
+    // October: only RM1 paid, rent only (no electricity or water)
+    expect(provider.rentCollected('2026-10'), 2500);
+    expect(provider.billsForMonth('2026-10').length, 3);
+    expect(provider.rentCollected('2026-09'), 2500);
+    expect(provider.rentCollected('2026-08'), 0);
+
+    await provider.togglePaid('p2');
+    await provider.togglePaid('p3');
+    await Future<void>.delayed(Duration.zero);
+    expect(provider.rentCollected('2026-10'), 7500);
+    expect(provider.nextDueDate, isNull);
+  });
 }

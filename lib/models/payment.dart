@@ -23,6 +23,29 @@ class Payment {
 
   double get total => roomRent + electricity + water;
 
+  static const _months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  // '2026-10' -> 'October 2026' (Home + Payments)
+  static String monthName(String month) {
+    final parts = month.split('-');
+    final index = int.tryParse(parts.length == 2 ? parts[1] : '');
+    if (index == null || index < 1 || index > 12) return month;
+    return '${_months[index - 1]} ${parts[0]}';
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'roomId': roomId,
