@@ -152,7 +152,17 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
               ],
             )
           : loading
-          ? const Center(child: CircularProgressIndicator())
+          // only the announcements part spins, the holidays stay usable
+          ? ListView(
+              padding: const EdgeInsets.all(16),
+              children: const [
+                HolidaySection(),
+                Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ],
+            )
           : announcements.isEmpty
           ? ListView(
               padding: const EdgeInsets.all(16),
