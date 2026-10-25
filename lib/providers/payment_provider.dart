@@ -33,6 +33,40 @@ class PaymentProvider extends ChangeNotifier {
     return sum;
   }
 
+  // earliest due date that is still unpaid, null = all paid
+  String? get nextDueDate {
+    String? next;
+    for (final p in _payments) {
+      if (!p.isPaid && (next == null || p.dueDate.compareTo(next) < 0)) {
+        next = p.dueDate;
+      }
+    }
+    return next;
+  }
+
+  // every billing month in the list, newest first (owner's month picker)
+  List<String> get months {
+    final list = <String>[];
+    for (final p in _payments) {
+      if (!list.contains(p.month)) list.add(p.month);
+    }
+    return list;
+  }
+
+  List<Payment> billsForMonth(String month) {
+    return _payments.where((p) => p.month == month).toList();
+  }
+
+  // owner's rent summary: room rent of the PAID bills of that month.
+  // electricity and water are not rent, so they are left out
+  double rentCollected(String month) {
+    double sum = 0;
+    for (final p in billsForMonth(month)) {
+      if (p.isPaid) sum += p.roomRent;
+    }
+    return sum;
+  }
+
   // newest month first, then by room. sorted here like concerns
   // so Firestore doesn't need an extra index
   void _setPayments(List<Payment> list) {
