@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'fake_database_service.dart';
+import 'fake_holiday_service.dart';
 
 // opens MainScreen (Home tab) like after login; MainScreen loads the data
 Future<void> openHome(
@@ -29,7 +30,9 @@ Future<void> openHome(
         ChangeNotifierProvider.value(value: payments),
         ChangeNotifierProvider(create: (_) => AnnouncementProvider(db: db)),
         ChangeNotifierProvider(create: (_) => ConcernProvider(db: db)),
-        ChangeNotifierProvider(create: (_) => HolidayProvider()),
+        ChangeNotifierProvider(
+          create: (_) => HolidayProvider(service: FakeHolidayService()),
+        ),
       ],
       child: const MaterialApp(home: MainScreen()),
     ),
