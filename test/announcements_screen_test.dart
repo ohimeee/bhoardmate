@@ -209,4 +209,22 @@ void main() {
     expect(find.text("New Year's Day"), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('refresh while offline switches to the saved holidays', (
+    tester,
+  ) async {
+    final auth = AuthProvider(db: FakeDatabaseService());
+    await auth.loginBoarder('BH01-RM2', '2222');
+    final service = FakeHolidayService()..online = nextYearHolidays();
+    await openScreen(tester, auth, holidayService: service);
+    expect(find.text('Offline: showing the saved list.'), findsNothing);
+
+    // phone goes offline, the list from last time is on the phone
+    service.offline = true;
+    service.saved = nextYearHolidays();
+    await tester.tap(find.byTooltip('Refresh announcements'));
+    await tester.pumpAndSettle();
+    expect(find.text('Offline: showing the saved list.'), findsOneWidget);
+    expect(find.text("New Year's Day"), findsOneWidget);
+  });
 }

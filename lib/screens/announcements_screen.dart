@@ -4,6 +4,7 @@ import '../app_theme.dart';
 import '../models/announcement.dart';
 import '../providers/announcement_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/holiday_provider.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/holiday_section.dart';
 
@@ -41,6 +42,13 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
     }
     if (!mounted) return;
     setState(() => _loading = false);
+  }
+
+  // refresh button also reloads the holidays, so going offline
+  // and tapping it shows the saved list (no-internet demo)
+  void _refresh() {
+    context.read<HolidayProvider>().loadHolidays();
+    _load();
   }
 
   Future<void> _edit([Announcement? announcement]) async {
@@ -111,7 +119,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
         actions: [
           IconButton(
             tooltip: 'Refresh announcements',
-            onPressed: loading || _busy ? null : _load,
+            onPressed: loading || _busy ? null : _refresh,
             icon: const Icon(Icons.refresh),
           ),
         ],
