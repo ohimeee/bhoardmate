@@ -5,6 +5,7 @@ import '../app_theme.dart';
 import '../models/payment.dart';
 import '../providers/announcement_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/holiday_provider.dart';
 import '../providers/payment_provider.dart';
 import '../widgets/balance_card.dart';
 import '../widgets/error_card.dart';
@@ -61,7 +62,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return name.isEmpty ? auth.currentRoomId ?? '' : name;
   }
 
-  Widget _balanceSection(AuthProvider auth, PaymentProvider payments) {
+  Widget _balanceSection(
+    AuthProvider auth,
+    PaymentProvider payments,
+    HolidayProvider holidays,
+  ) {
     if (payments.isLoading) {
       return const Padding(
         padding: EdgeInsets.all(24),
@@ -74,6 +79,13 @@ class _HomeScreenState extends State<HomeScreen> {
       return ErrorCard(message: error, onRetry: _reloadPayments);
     }
     final nextDue = payments.nextDueDate;
+    String subtitle = 'All paid';
+    if (nextDue != null) {
+      // shown date follows the holiday/weekend rule (#16)
+      subtitle = 'Next due: ${holidays.dueDate(nextDue)}';
+      final note = holidays.dueDateNote(nextDue);
+      if (note != null) subtitle = '$subtitle\n$note';
+    }
     return Column(
       // full width like the cards below it
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -83,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ? 'Unpaid total (all rooms)'
               : 'Outstanding balance',
           amount: payments.outstandingBalance,
-          subtitle: nextDue == null ? 'All paid' : 'Next due: $nextDue',
+          subtitle: subtitle,
         ),
         // a failed refresh keeps the old bills, so say they may be old
         if (error != null) ...[
@@ -238,6 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final auth = context.watch<AuthProvider>();
     final payments = context.watch<PaymentProvider>();
     final news = context.watch<AnnouncementProvider>();
+    final holidays = context.watch<HolidayProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -259,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: const TextStyle(color: AppColors.textLight),
           ),
           const SizedBox(height: 12),
-          _balanceSection(auth, payments),
+          _balanceSection(auth, payments, holidays),
           if (auth.isOwner) ...[
             const SizedBox(height: 12),
             _rentSummary(payments),
