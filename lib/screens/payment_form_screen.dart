@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../app_theme.dart';
 import '../models/payment.dart';
 import '../providers/auth_provider.dart';
+import '../providers/holiday_provider.dart';
 import '../providers/payment_provider.dart';
 import '../widgets/electricity_solver.dart';
 
@@ -164,6 +165,9 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final holidays = context.watch<HolidayProvider>();
+    final picked = DateTime.tryParse(_dueDate);
+    final reason = picked == null ? null : holidays.dayOffReason(picked);
     final rooms = context.watch<AuthProvider>().rooms;
 
     return Scaffold(
@@ -269,7 +273,12 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event, color: AppColors.icon),
               title: const Text('Due date'),
-              subtitle: Text(_dueDate),
+              subtitle: Text(
+                // the bill keeps this date, boarders see the moved one
+                reason == null
+                    ? _dueDate
+                    : '$_dueDate\n$reason, boarders see ${holidays.dueDate(_dueDate)}',
+              ),
               trailing: TextButton(
                 onPressed: _saving ? null : _pickDueDate,
                 child: const Text('Change'),
