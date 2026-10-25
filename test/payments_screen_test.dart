@@ -38,6 +38,61 @@ Future<void> openScreen(
 }
 
 void main() {
+  testWidgets('no rooms shows guidance instead of an unusable bill form', (
+    tester,
+  ) async {
+    final db = FakeDatabaseService();
+    final auth = AuthProvider(db: db);
+    await auth.loginOwner('owner@bhoardmate.app', 'admin123');
+    db.rooms = [];
+    await auth.loadRooms();
+    await openScreen(tester, auth, db);
+    await tester.tap(find.text('Add bill'));
+    await tester.pumpAndSettle();
+    expect(find.text('No rooms available'), findsOneWidget);
+    expect(find.text('Save bill'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('editing a bill for a removed room does not crash or save', (
+    tester,
+  ) async {
+    final db = FakeDatabaseService();
+    final auth = AuthProvider(db: db);
+    await auth.loginOwner('owner@bhoardmate.app', 'admin123');
+    await openScreen(tester, auth, db);
+    await tester.tap(find.byTooltip('Edit bill').first);
+    await tester.pumpAndSettle();
+    final removedId = db.payments.first.roomId;
+    db.rooms.removeWhere((room) => room.id == removedId);
+    await auth.loadRooms();
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Save bill'));
+    await tester.pumpAndSettle();
+    expect(find.text('This room is no longer available'), findsOneWidget);
+    expect(find.text('Bill saved.'), findsNothing);
+  });
+
+  testWidgets('finite bill amounts cannot overflow the total', (tester) async {
+    final db = FakeDatabaseService();
+    final auth = AuthProvider(db: db);
+    await auth.loginOwner('owner@bhoardmate.app', 'admin123');
+    await openScreen(tester, auth, db);
+    await tester.tap(find.byTooltip('Edit bill').first);
+    await tester.pumpAndSettle();
+    final original = db.payments.first.roomRent;
+    await tester.enterText(find.byType(TextFormField).at(1), '1e308');
+    await tester.enterText(find.byType(TextFormField).at(2), '1e308');
+    await tester.tap(find.text('Save bill'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('The bill total is too large. Check the amounts.'),
+      findsOneWidget,
+    );
+    expect(db.payments.first.roomRent, original);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('boarder sees own bills, breakdown and the solver', (
     tester,
   ) async {

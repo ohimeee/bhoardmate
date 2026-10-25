@@ -5,6 +5,7 @@ import '../app_theme.dart';
 import '../models/holiday.dart';
 import '../providers/holiday_provider.dart';
 import 'error_card.dart';
+import 'empty_state.dart';
 
 // "Upcoming PH holidays" card on the News tab, data from Nager.Date.
 // Shows loading, error + Retry, and a note when the list is the saved one
@@ -151,9 +152,9 @@ class _HolidaySectionState extends State<HolidaySection> {
                   ),
                 ),
               if (upcoming.isEmpty)
-                const Text(
-                  'No upcoming holidays.',
-                  style: TextStyle(color: AppColors.textLight),
+                const EmptyState(
+                  icon: Icons.event_outlined,
+                  title: 'No upcoming holidays.',
                 ),
               for (final holiday in shown) _holidayTile(holiday),
               if (upcoming.length > 3)

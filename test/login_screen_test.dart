@@ -36,6 +36,26 @@ Future<void> openLogin(WidgetTester tester, AuthProvider auth) async {
 }
 
 void main() {
+  testWidgets('owner email rejects incomplete and spaced addresses', (
+    tester,
+  ) async {
+    await openLogin(tester, AuthProvider(db: FakeDatabaseService()));
+    await tester.tap(find.text('Owner? Log in as admin'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).at(1), 'admin123');
+    for (final email in [
+      '@',
+      'owner@',
+      'owner@@example.com',
+      'owner name@example.com',
+    ]) {
+      await tester.enterText(find.byType(TextFormField).first, email);
+      await tester.tap(find.text('Log in'));
+      await tester.pumpAndSettle();
+      expect(find.text('Enter a valid email'), findsOneWidget);
+      expect(find.text('Wrong email or password'), findsNothing);
+    }
+  });
   testWidgets('boarder form validates and shows a wrong code error', (
     tester,
   ) async {

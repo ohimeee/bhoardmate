@@ -4,6 +4,7 @@ import 'package:bhoardmate/models/room.dart';
 import 'package:bhoardmate/providers/announcement_provider.dart';
 import 'package:bhoardmate/providers/auth_provider.dart';
 import 'package:bhoardmate/providers/concern_provider.dart';
+import 'package:bhoardmate/providers/holiday_provider.dart';
 import 'package:bhoardmate/screens/announcements_screen.dart';
 import 'package:bhoardmate/screens/concerns_screen.dart';
 import 'package:bhoardmate/screens/members_screen.dart';
@@ -14,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'fake_database_service.dart';
+import 'fake_holiday_service.dart';
 
 class RoomStreamFailure extends FakeDatabaseService {
   final roomUpdates = StreamController<List<Room>>.broadcast();
@@ -34,6 +36,9 @@ Future<void> openValidationScreen(
         ChangeNotifierProvider.value(value: auth),
         ChangeNotifierProvider(create: (_) => AnnouncementProvider(db: db)),
         ChangeNotifierProvider(create: (_) => ConcernProvider(db: db)),
+        ChangeNotifierProvider(
+          create: (_) => HolidayProvider(service: FakeHolidayService()),
+        ),
       ],
       child: MaterialApp(home: screen),
     ),
@@ -58,7 +63,7 @@ void main() {
       db.announcements = [];
       db.concerns = [];
       await openValidationScreen(tester, db, auth, entry.value);
-      expect(find.byType(EmptyState), findsOneWidget);
+      expect(find.byType(EmptyState), findsWidgets);
       expect(find.text(entry.key), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsNothing);
       await tester.pumpWidget(const SizedBox());
