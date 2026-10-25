@@ -34,7 +34,8 @@ class Room {
   factory Room.fromMap(String id, Map<String, dynamic> map) {
     return Room(
       id: id,
-      accessCode: map['accessCode'] as String,
+      // codes are kept in roomCodes/, so rooms/ docs don't have one
+      accessCode: map['accessCode'] as String? ?? '',
       monthlyRent: (map['monthlyRent'] as num).toDouble(),
       boarderName: map['boarderName'] as String?,
       contactNumber: map['contactNumber'] as String?,
@@ -44,7 +45,7 @@ class Room {
     );
   }
 
-  // used by resetAccessCode (boarder fields go back to null)
+  // changes only the code, boarder fields stay the same
   Room copyWith({String? accessCode}) {
     return Room(
       id: id,

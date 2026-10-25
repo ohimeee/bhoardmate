@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../app_theme.dart';
 import '../models/concern.dart';
 import '../providers/auth_provider.dart';
 import '../providers/concern_provider.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/status_chip.dart';
 
 class ConcernsScreen extends StatefulWidget {
   const ConcernsScreen({super.key});
@@ -84,16 +87,10 @@ class _ConcernsScreenState extends State<ConcernsScreen> {
           content: Text('Remove "${concern.title}"? This cannot be undone.'),
           actions: [
             TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF2E6B4F),
-              ),
               onPressed: () => Navigator.pop(dialogContext, false),
               child: const Text('Cancel'),
             ),
             TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF2E6B4F),
-              ),
               onPressed: () => Navigator.pop(dialogContext, true),
               child: const Text('Remove'),
             ),
@@ -148,11 +145,10 @@ class _ConcernsScreenState extends State<ConcernsScreen> {
     final loading = _loading || provider.isLoading;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF6EE),
       appBar: AppBar(
         title: const Text('Concerns'),
-        backgroundColor: const Color(0xFFFADCDC),
-        foregroundColor: Colors.black87,
+        backgroundColor: AppColors.concerns,
+        foregroundColor: AppColors.concernsDark,
         actions: [
           IconButton(
             tooltip: 'Refresh concerns',
@@ -165,63 +161,24 @@ class _ConcernsScreenState extends State<ConcernsScreen> {
           auth.isLoggedIn && !auth.isOwner && auth.currentRoomId != null
           ? FloatingActionButton.extended(
               onPressed: loading || _busy || error != null ? null : _report,
-              backgroundColor: const Color(0xFF2E6B4F),
-              foregroundColor: Colors.white,
               icon: const Icon(Icons.add),
               label: const Text('Report a concern'),
             )
           : null,
       body: error != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(error, textAlign: TextAlign.center),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF2E6B4F),
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: loading ? null : _load,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
+          ? EmptyState(
+              icon: Icons.error_outline,
+              title: error,
+              buttonLabel: 'Retry',
+              onPressed: loading ? null : _load,
             )
           : loading
           ? const Center(child: CircularProgressIndicator())
           : concerns.isEmpty
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.chat_bubble_outline,
-                      size: 48,
-                      color: Color(0xFF5B5BD6),
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'No concerns yet',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Reported concerns will appear here.',
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
+          ? const EmptyState(
+              icon: Icons.chat_bubble_outline,
+              title: 'No concerns yet',
+              message: 'Reported concerns will appear here.',
             )
           : ListView.builder(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
@@ -231,12 +188,7 @@ class _ConcernsScreenState extends State<ConcernsScreen> {
                 final done = concern.status == 'done';
                 final date = DateTime.tryParse(concern.createdAt)?.toLocal();
                 return Card(
-                  color: Colors.white,
-                  elevation: 3,
                   margin: const EdgeInsets.only(bottom: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -246,7 +198,6 @@ class _ConcernsScreenState extends State<ConcernsScreen> {
                           children: [
                             if (auth.isOwner)
                               Checkbox(
-                                activeColor: const Color(0xFF2E6B4F),
                                 value: done,
                                 semanticLabel:
                                     'Mark ${concern.title} ${done ? 'pending' : 'done'}',
@@ -281,18 +232,7 @@ class _ConcernsScreenState extends State<ConcernsScreen> {
                             'Reported: ${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
                           ),
                         const SizedBox(height: 12),
-                        Chip(
-                          label: Text(done ? 'Done' : 'Pending'),
-                          backgroundColor: done
-                              ? const Color(0xFFD8F0E0)
-                              : const Color(0xFFFDF0D5),
-                          labelStyle: TextStyle(
-                            color: done
-                                ? const Color(0xFF1E5E3F)
-                                : const Color(0xFFB7791F),
-                          ),
-                          side: BorderSide.none,
-                        ),
+                        StatusChip(status: concern.status),
                       ],
                     ),
                   ),
@@ -427,17 +367,10 @@ class _ReportConcernDialogState extends State<_ReportConcernDialog> {
         ),
         actions: [
           TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF2E6B4F),
-            ),
             onPressed: _saving ? null : () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF2E6B4F),
-              foregroundColor: Colors.white,
-            ),
             onPressed: _saving ? null : _submit,
             child: Text(_saving ? 'Saving...' : 'Submit'),
           ),

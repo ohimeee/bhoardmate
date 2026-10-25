@@ -8,6 +8,7 @@ import '../providers/holiday_provider.dart';
 import '../providers/payment_provider.dart';
 import 'announcements_screen.dart';
 import 'home_screen.dart';
+import 'login_screen.dart';
 import 'members_screen.dart';
 import 'payments_screen.dart';
 
@@ -21,17 +22,10 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    PaymentsScreen(),
-    AnnouncementsScreen(),
-    MembersScreen(),
-  ];
-
   @override
   void initState() {
     super.initState();
-    // load sample data once after login
+    // load data once after login
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthProvider>();
       // owner sees every room, boarder only their own
@@ -49,10 +43,40 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  bool _leaving = false;
+
   @override
   Widget build(BuildContext context) {
+    // logout button or the owner reset this boarder's code:
+    // go back to login and remove every screen behind it
+    final loggedIn = context.watch<AuthProvider>().isLoggedIn;
+    if (!loggedIn && !_leaving) {
+      _leaving = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        // forget the old user's data before the next login
+        context.read<PaymentProvider>().clear();
+        context.read<AnnouncementProvider>().clear();
+        context.read<ConcernProvider>().clear();
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+      });
+    }
+
+    // Home gets _onItemTapped so its Payments tile and "See all"
+    // switch tabs like the bottom nav does
+    final screens = [
+      HomeScreen(onOpenTab: _onItemTapped),
+      const PaymentsScreen(),
+      const AnnouncementsScreen(),
+      const MembersScreen(showOwnProfile: true),
+    ];
+
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _screens),
+      body: IndexedStack(index: _selectedIndex, children: screens),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,

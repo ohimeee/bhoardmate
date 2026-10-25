@@ -5,12 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'fake_database_service.dart';
+
 Future<void> openScreen(WidgetTester tester, AuthProvider auth) async {
   await tester.pumpWidget(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: auth),
-        ChangeNotifierProvider(create: (_) => ConcernProvider()),
+        ChangeNotifierProvider(
+          create: (_) => ConcernProvider(db: FakeDatabaseService()),
+        ),
       ],
       child: const MaterialApp(home: ConcernsScreen()),
     ),
@@ -22,7 +26,7 @@ void main() {
   testWidgets('boarder validates and reports only for their room', (
     tester,
   ) async {
-    final auth = AuthProvider();
+    final auth = AuthProvider(db: FakeDatabaseService());
     await auth.loginBoarder('BH01-RM2', '2222');
     await openScreen(tester, auth);
     expect(find.text('Leaking faucet'), findsOneWidget);
@@ -30,6 +34,8 @@ void main() {
     expect(find.byType(Checkbox), findsNothing);
     await tester.tap(find.text('Report a concern'));
     await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).at(0), '   ');
+    await tester.enterText(find.byType(TextFormField).at(1), '   ');
     await tester.tap(find.text('Submit'));
     await tester.pumpAndSettle();
     expect(find.text('Title is required'), findsOneWidget);
@@ -49,7 +55,7 @@ void main() {
   });
 
   testWidgets('owner toggles status and confirms deletion', (tester) async {
-    final auth = AuthProvider();
+    final auth = AuthProvider(db: FakeDatabaseService());
     await auth.loginOwner('owner@bhoardmate.app', 'admin123');
     await openScreen(tester, auth);
     expect(find.text('Report a concern'), findsNothing);
@@ -61,24 +67,26 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
-    expect(find.text('Leaking faucet'), findsOneWidget);
+    // newest first, so the first card is the newest concern
+    expect(find.text('Clogged sink'), findsOneWidget);
     await tester.tap(find.byTooltip('Remove concern').first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Remove'));
     await tester.pumpAndSettle();
-    expect(find.text('Leaking faucet'), findsNothing);
+    expect(find.text('Clogged sink'), findsNothing);
+    expect(find.text('Leaking faucet'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('empty room shows empty state', (tester) async {
-    final auth = AuthProvider();
+    final auth = AuthProvider(db: FakeDatabaseService());
     await auth.loginBoarder('BH01-RM4', '4444');
     await openScreen(tester, auth);
     expect(find.text('No concerns yet'), findsOneWidget);
   });
 
   testWidgets('logged out users cannot see concerns or report', (tester) async {
-    await openScreen(tester, AuthProvider());
+    await openScreen(tester, AuthProvider(db: FakeDatabaseService()));
     expect(
       find.text('Please log in again to view your concerns.'),
       findsOneWidget,

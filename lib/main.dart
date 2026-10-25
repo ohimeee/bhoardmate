@@ -1,7 +1,9 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import 'app_theme.dart';
+import 'firebase_options.dart';
 import 'providers/announcement_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/concern_provider.dart';
@@ -9,7 +11,12 @@ import 'providers/holiday_provider.dart';
 import 'providers/payment_provider.dart';
 import 'screens/login_screen.dart';
 
-void main() => runApp(const BhoardMateApp());
+// Firebase has to start before the app uses Firestore or Auth
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(const BhoardMateApp());
+}
 
 class BhoardMateApp extends StatelessWidget {
   const BhoardMateApp({super.key});
@@ -25,17 +32,9 @@ class BhoardMateApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HolidayProvider()),
       ],
       child: MaterialApp(
-        title: 'BhoardMate',
+        title: 'BHoardMate',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorSchemeSeed: Colors.amber,
-          textTheme: GoogleFonts.poppinsTextTheme(),
-          // warm yellow app bars on every screen
-          appBarTheme: AppBarTheme(
-            backgroundColor: Colors.amber.shade300,
-            foregroundColor: Colors.black87,
-          ),
-        ),
+        theme: appTheme(),
         home: const LoginScreen(),
       ),
     );

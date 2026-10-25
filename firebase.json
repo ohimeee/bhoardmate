@@ -1,0 +1,24 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "bhoardmate",
+          "appId": "1:194161165577:android:dbf215d62adaf4a0e77fd8",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "bhoardmate",
+          "configurations": {
+            "android": "1:194161165577:android:dbf215d62adaf4a0e77fd8"
+          }
+        }
+      }
+    }
+  }
+}

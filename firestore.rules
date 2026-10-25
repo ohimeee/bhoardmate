@@ -1,0 +1,125 @@
+rules_version = '2';
+
+// BHoardMate security rules
+// owner = has a doc in owners/
+// boarder = anonymous user with a session whose code still matches the room
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/owners/$(request.auth.uid));
+    }
+
+    function session() {
+      return get(/databases/$(database)/documents/sessions/$(request.auth.uid)).data;
+    }
+
+    function roomCode(roomId) {
+      return get(/databases/$(database)/documents/roomCodes/$(roomId)).data.accessCode;
+    }
+
+    // checked on every read, so resetting a code locks the old boarder out
+    function validBoarder() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/sessions/$(request.auth.uid))
+        && session().accessCode == roomCode(session().roomId);
+    }
+
+    function myRoom() {
+      return session().roomId;
+    }
+
+    function onlyChanges(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    // optional text field: missing, null or a string
+    function optionalString(d, key) {
+      return d.get(key, null) == null || d.get(key, null) is string;
+    }
+
+    // same fields and types that Room.fromMap reads, so one bad write
+    // can't break the Members list for everyone (no accessCode in here)
+    function validRoom(d) {
+      return d.keys().hasOnly(['monthlyRent', 'boarderName', 'contactNumber',
+          'age', 'emergencyContactName', 'emergencyContactNumber'])
+        && d.monthlyRent is number
+        && optionalString(d, 'boarderName')
+        && optionalString(d, 'contactNumber')
+        && (d.get('age', null) == null || d.get('age', null) is int)
+        && optionalString(d, 'emergencyContactName')
+        && optionalString(d, 'emergencyContactNumber');
+    }
+
+    // every field Concern.fromMap reads must be there with the right type
+    function validConcern(d) {
+      return d.keys().hasOnly(['roomId', 'title', 'description', 'status', 'createdAt'])
+        && d.roomId is string
+        && d.title is string && d.title.size() > 0
+        && d.description is string && d.description.size() > 0
+        && d.status in ['pending', 'done']
+        && d.createdAt is string;
+    }
+
+    match /owners/{uid} {
+      // boarders see the landlord card
+      allow read: if signedIn();
+      // first owner doc, only for the owner's email account
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.auth.token.email == 'owner@bhoardmate.app';
+      allow update: if signedIn() && request.auth.uid == uid
+        && onlyChanges(['name', 'contactNumber']);
+    }
+
+    match /roomCodes/{roomId} {
+      allow read, write: if isOwner();
+    }
+
+    match /sessions/{uid} {
+      // the room ID + code check for boarder login
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.accessCode == roomCode(request.resource.data.roomId);
+      allow read, delete: if signedIn() && request.auth.uid == uid;
+      allow read: if isOwner();
+    }
+
+    match /rooms/{roomId} {
+      // boarders can see boardmates (codes are not in here)
+      allow read: if isOwner() || validBoarder();
+      allow create: if isOwner() && validRoom(request.resource.data);
+      allow delete: if isOwner();
+      // boarder edits only the profile fields of their own room
+      allow update: if validRoom(request.resource.data)
+        && (isOwner()
+          || (validBoarder() && roomId == myRoom()
+            && onlyChanges(['boarderName', 'contactNumber', 'age',
+              'emergencyContactName', 'emergencyContactNumber'])));
+    }
+
+    match /payments/{id} {
+      allow read, write: if isOwner();
+      allow read: if validBoarder() && resource.data.roomId == myRoom();
+    }
+
+    match /announcements/{id} {
+      allow read: if isOwner() || validBoarder();
+      allow write: if isOwner();
+    }
+
+    match /concerns/{id} {
+      allow read, delete: if isOwner();
+      allow create, update: if isOwner() && validConcern(request.resource.data);
+      allow read, delete: if validBoarder() && resource.data.roomId == myRoom();
+      // new concerns start as pending, only the owner marks them done
+      allow create: if validBoarder()
+        && validConcern(request.resource.data)
+        && request.resource.data.roomId == myRoom()
+        && request.resource.data.status == 'pending';
+    }
+  }
+}
