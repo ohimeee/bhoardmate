@@ -15,10 +15,11 @@ Future<void> openHome(
   WidgetTester tester,
   AuthProvider auth,
   FakeDatabaseService db,
-  PaymentProvider payments,
-) async {
+  PaymentProvider payments, {
+  double width = 800,
+}) async {
   // tall screen so every Home section is built
-  tester.view.physicalSize = const Size(800, 3000);
+  tester.view.physicalSize = Size(width, 3000);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
@@ -129,5 +130,19 @@ void main() {
       findsNothing,
     );
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('tiles fit on narrow 360 and 320 dp phones', (tester) async {
+    final db = FakeDatabaseService();
+    final auth = AuthProvider(db: db);
+    await auth.loginOwner('owner@bhoardmate.app', 'admin123');
+    // 360 = common Android width, 320 = small phones
+    for (final width in [360.0, 320.0]) {
+      await openHome(tester, auth, db, PaymentProvider(db: db), width: width);
+      expect(find.text('Announcements'), findsOneWidget);
+      expect(find.text('Rooms'), findsOneWidget);
+      // a RenderFlex overflow is reported as an exception in tests
+      expect(tester.takeException(), isNull);
+    }
   });
 }
