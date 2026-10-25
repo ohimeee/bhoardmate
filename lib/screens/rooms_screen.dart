@@ -50,7 +50,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final allowed = auth.isLoggedIn && auth.isOwner;
-    final error = _error ?? auth.errorMessage;
+    final error = _error;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Rooms'),

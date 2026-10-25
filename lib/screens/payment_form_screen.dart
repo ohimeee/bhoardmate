@@ -149,8 +149,10 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
       );
       return;
     }
-    setState(() => _error = null);
-    setState(() => _saving = true);
+    setState(() {
+      _error = null;
+      _saving = true;
+    });
 
     final payment = Payment(
       id: widget.payment?.id,
@@ -166,19 +168,10 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
     );
 
     final provider = context.read<PaymentProvider>();
-    try {
-      if (_isEdit) {
-        await provider.updatePayment(payment);
-      } else {
-        await provider.addPayment(payment);
-      }
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _saving = false;
-        _error = 'Could not save the bill. Please try again.';
-      });
-      return;
+    if (_isEdit) {
+      await provider.updatePayment(payment);
+    } else {
+      await provider.addPayment(payment);
     }
     if (!mounted) return;
     setState(() => _saving = false);
@@ -202,9 +195,6 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
     final shownDate = holidays.dueDate(_dueDate);
     final auth = context.watch<AuthProvider>();
     final rooms = auth.rooms;
-    final roomExists = rooms.any((room) => room.id == _roomId);
-    // Keep the selected room in the menu if its live document disappears.
-    // Validation prevents saving it until the owner picks an available room.
 
     return Scaffold(
       appBar: AppBar(
@@ -217,12 +207,6 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
               icon: Icons.lock_outline,
               title: 'Only the owner can manage bills.',
             )
-          : rooms.isEmpty
-          ? const EmptyState(
-              icon: Icons.meeting_room_outlined,
-              title: 'No rooms available',
-              message: 'Add a room in Rooms before creating a bill.',
-            )
           : Form(
               key: _formKey,
               child: ListView(
@@ -231,33 +215,22 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
                   DropdownButtonFormField<String>(
                     initialValue: _roomId,
                     decoration: const InputDecoration(labelText: 'Room'),
-                    items: [
-                      if (_roomId != null && !roomExists)
-                        DropdownMenuItem(
-                          value: _roomId,
-                          enabled: false,
-                          child: Text('$_roomId (unavailable)'),
-                        ),
-                      ...rooms.map(
-                        (room) => DropdownMenuItem(
-                          value: room.id,
-                          child: Text(
-                            room.boarderName == null
-                                ? '${room.id} (vacant)'
-                                : '${room.id} - ${room.boarderName}',
+                    items: rooms
+                        .map(
+                          (room) => DropdownMenuItem(
+                            value: room.id,
+                            child: Text(
+                              room.boarderName == null
+                                  ? '${room.id} (vacant)'
+                                  : '${room.id} - ${room.boarderName}',
+                            ),
                           ),
-                        ),
-                      ),
-                    ],
+                        )
+                        .toList(),
                     // the room can't change when editing a bill
                     onChanged: _isEdit || _saving ? null : _pickRoom,
-                    validator: (value) {
-                      if (value == null) return 'Room is required';
-                      if (!rooms.any((room) => room.id == value)) {
-                        return 'This room is no longer available';
-                      }
-                      return null;
-                    },
+                    validator: (value) =>
+                        value == null ? 'Room is required' : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:bhoardmate/models/room.dart';
 import 'package:bhoardmate/providers/announcement_provider.dart';
 import 'package:bhoardmate/providers/auth_provider.dart';
@@ -17,11 +15,19 @@ import 'package:provider/provider.dart';
 import 'fake_database_service.dart';
 import 'fake_holiday_service.dart';
 
-class RoomStreamFailure extends FakeDatabaseService {
-  final roomUpdates = StreamController<List<Room>>.broadcast();
+class FailedRoomSave extends FakeDatabaseService {
+  @override
+  Future<void> updateRoom(Room room) async => throw Exception('Save failed');
+}
+
+class FailedRoomLoad extends FakeDatabaseService {
+  bool failLoad = false;
 
   @override
-  Stream<List<Room>> roomsStream() => roomUpdates.stream;
+  Future<List<Room>> getRooms() async {
+    if (failLoad) throw Exception('Load failed');
+    return super.getRooms();
+  }
 }
 
 Future<void> openValidationScreen(
@@ -47,6 +53,26 @@ Future<void> openValidationScreen(
 }
 
 void main() {
+  for (final screen in [const RoomsScreen(), const MembersScreen()]) {
+    testWidgets('${screen.runtimeType} retries a failed initial load', (
+      tester,
+    ) async {
+      final db = FailedRoomLoad();
+      final auth = AuthProvider(db: db);
+      await auth.loginOwner('owner@bhoardmate.app', 'admin123');
+      db.failLoad = true;
+      await openValidationScreen(tester, db, auth, screen);
+      expect(find.text('Retry'), findsOneWidget);
+      expect(find.text('Maria Santos'), findsNothing);
+      db.failLoad = false;
+      await tester.tap(find.text('Retry'));
+      await tester.pumpAndSettle();
+      expect(find.text('Maria Santos'), findsOneWidget);
+      expect(find.text('Retry'), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+      auth.dispose();
+    });
+  }
   final screens = <String, Widget>{
     'No announcements yet': const AnnouncementsScreen(),
     'No concerns yet': const ConcernsScreen(),
@@ -71,32 +97,40 @@ void main() {
     });
   }
 
-  for (final screen in [const RoomsScreen(), const MembersScreen()]) {
-    testWidgets(
-      '${screen.runtimeType} shows a later provider error and retries',
-      (tester) async {
-        final db = RoomStreamFailure();
-        final auth = AuthProvider(db: db);
-        await auth.loginOwner('owner@bhoardmate.app', 'admin123');
-        await openValidationScreen(tester, db, auth, screen);
-        expect(find.text('Maria Santos'), findsOneWidget);
-        db.roomUpdates.addError(Exception('Stream failed'));
-        await tester.pumpAndSettle();
-        expect(
-          find.text('Something went wrong. Please try again.'),
-          findsOneWidget,
-        );
-        expect(find.text('Maria Santos'), findsNothing);
-        await tester.tap(find.text('Retry'));
-        await tester.pumpAndSettle();
-        expect(find.text('Maria Santos'), findsOneWidget);
-        expect(find.text('Retry'), findsNothing);
-        await tester.pumpWidget(const SizedBox());
-        auth.dispose();
-        await db.roomUpdates.close();
-      },
+  testWidgets('failed rent save keeps Rooms and Members lists visible', (
+    tester,
+  ) async {
+    final db = FailedRoomSave();
+    final auth = AuthProvider(db: db);
+    await auth.loginOwner('owner@bhoardmate.app', 'admin123');
+    await openValidationScreen(tester, db, auth, const RoomsScreen());
+    await tester.tap(find.text('Edit rent').first);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), '3000');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Something went wrong. Please try again.'),
+      findsOneWidget,
     );
-  }
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Edit rent'), findsWidgets);
+    expect(find.text('Retry'), findsNothing);
+    expect(
+      tester
+          .widget<FloatingActionButton>(find.byType(FloatingActionButton))
+          .onPressed,
+      isNotNull,
+    );
+    await openValidationScreen(tester, db, auth, const MembersScreen());
+    await auth.updateRoom(auth.rooms.first);
+    await tester.pumpAndSettle();
+    expect(find.text('Maria Santos'), findsOneWidget);
+    expect(find.text('Retry'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    auth.dispose();
+  });
 
   testWidgets('missing own room does not show the boardmate directory on Me', (
     tester,

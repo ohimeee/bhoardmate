@@ -44,7 +44,7 @@ class _MembersScreenState extends State<MembersScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final error = _error ?? auth.errorMessage;
+    final error = _error;
     if (widget.showOwnProfile && auth.isLoggedIn && auth.isOwner) {
       return OwnerProfileScreen(onSave: auth.updateOwner);
     }
