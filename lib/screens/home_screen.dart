@@ -75,6 +75,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     final nextDue = payments.nextDueDate;
     return Column(
+      // full width like the cards below it
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         BalanceCard(
           title: auth.isOwner
@@ -269,6 +271,8 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisCount: 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
+            // wider than tall, like the wireframe
+            childAspectRatio: 1.5,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             children: [
