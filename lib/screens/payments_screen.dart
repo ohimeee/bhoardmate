@@ -8,6 +8,7 @@ import '../providers/payment_provider.dart';
 import '../widgets/balance_card.dart';
 import '../widgets/electricity_solver.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/error_card.dart';
 import '../widgets/status_chip.dart';
 import 'payment_form_screen.dart';
 
@@ -15,29 +16,6 @@ import 'payment_form_screen.dart';
 // owner: every room's bills, paid/unpaid toggle, add/edit/delete
 class PaymentsScreen extends StatelessWidget {
   const PaymentsScreen({super.key});
-
-  static const _months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-
-  // '2026-10' -> 'October 2026'
-  String _monthName(String month) {
-    final parts = month.split('-');
-    final index = int.tryParse(parts.length == 2 ? parts[1] : '');
-    if (index == null || index < 1 || index > 12) return month;
-    return '${_months[index - 1]} ${parts[0]}';
-  }
 
   void _reload(BuildContext context) {
     final auth = context.read<AuthProvider>();
@@ -92,7 +70,7 @@ class PaymentsScreen extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Remove bill?'),
         content: Text(
-          'Remove the ${_monthName(payment.month)} bill of ${payment.roomId}? This cannot be undone.',
+          'Remove the ${Payment.monthName(payment.month)} bill of ${payment.roomId}? This cannot be undone.',
         ),
         actions: [
           TextButton(
@@ -149,7 +127,7 @@ class PaymentsScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    _monthName(payment.month),
+                    Payment.monthName(payment.month),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -212,14 +190,7 @@ class PaymentsScreen extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final provider = context.watch<PaymentProvider>();
     final payments = provider.payments;
-
-    // earliest due date that is still unpaid
-    String? nextDue;
-    for (final p in payments) {
-      if (!p.isPaid && (nextDue == null || p.dueDate.compareTo(nextDue) < 0)) {
-        nextDue = p.dueDate;
-      }
-    }
+    final nextDue = provider.nextDueDate;
 
     Widget body;
     if (provider.isLoading) {
@@ -245,22 +216,9 @@ class PaymentsScreen extends StatelessWidget {
           // a failed refresh keeps the old bills, so say they may be old
           if (provider.errorMessage != null) ...[
             const SizedBox(height: 12),
-            Card(
-              color: AppColors.unpaid,
-              child: ListTile(
-                leading: const Icon(
-                  Icons.error_outline,
-                  color: AppColors.unpaidText,
-                ),
-                title: Text(
-                  provider.errorMessage!,
-                  style: const TextStyle(color: AppColors.unpaidText),
-                ),
-                trailing: TextButton(
-                  onPressed: () => _reload(context),
-                  child: const Text('Retry'),
-                ),
-              ),
+            ErrorCard(
+              message: provider.errorMessage!,
+              onRetry: () => _reload(context),
             ),
           ],
           const SizedBox(height: 12),
