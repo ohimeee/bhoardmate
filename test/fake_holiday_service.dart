@@ -6,6 +6,8 @@ import 'package:bhoardmate/services/holiday_service.dart';
 class FakeHolidayService extends HolidayService {
   bool offline = false;
   List<Holiday> saved = [];
+  // what the API returns; null = sample() for each year
+  List<Holiday>? online;
 
   // a few holidays in the given year
   static List<Holiday> sample(int year) {
@@ -26,6 +28,9 @@ class FakeHolidayService extends HolidayService {
   @override
   Future<List<Holiday>> fetchHolidays(int year) async {
     if (offline) throw const HolidayException('No internet connection.');
+    if (online != null) {
+      return online!.where((h) => h.date.year == year).toList();
+    }
     return sample(year);
   }
 
