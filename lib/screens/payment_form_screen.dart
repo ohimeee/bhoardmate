@@ -93,8 +93,9 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
     final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.tryParse(_dueDate) ?? DateTime.now(),
-      firstDate: DateTime(2025),
-      lastDate: DateTime(2030),
+      // the years HolidayProvider loads, so the due date rule can check them
+      firstDate: DateTime(DateTime.now().year - 1),
+      lastDate: DateTime(DateTime.now().year + 1, 12, 31),
     );
     if (picked == null) return;
     setState(() {
@@ -166,8 +167,8 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
   @override
   Widget build(BuildContext context) {
     final holidays = context.watch<HolidayProvider>();
-    final picked = DateTime.tryParse(_dueDate);
-    final reason = picked == null ? null : holidays.dayOffReason(picked);
+    final dueNote = holidays.dueDateNote(_dueDate);
+    final shownDate = holidays.dueDate(_dueDate);
     final rooms = context.watch<AuthProvider>().rooms;
 
     return Scaffold(
@@ -275,9 +276,11 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
               title: const Text('Due date'),
               subtitle: Text(
                 // the bill keeps this date, boarders see the moved one
-                reason == null
+                dueNote == null
                     ? _dueDate
-                    : '$_dueDate\n$reason, boarders see ${holidays.dueDate(_dueDate)}',
+                    : shownDate == _dueDate
+                    ? '$_dueDate\n$dueNote'
+                    : '$_dueDate\n$dueNote, boarders see $shownDate',
               ),
               trailing: TextButton(
                 onPressed: _saving ? null : _pickDueDate,
