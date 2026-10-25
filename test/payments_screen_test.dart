@@ -1,5 +1,6 @@
 import 'package:bhoardmate/models/payment.dart';
 import 'package:bhoardmate/providers/auth_provider.dart';
+import 'package:bhoardmate/providers/holiday_provider.dart';
 import 'package:bhoardmate/providers/payment_provider.dart';
 import 'package:bhoardmate/screens/payments_screen.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'fake_database_service.dart';
+import 'fake_holiday_service.dart';
 
 // MainScreen loads the payments in the app, so the test loads them here
 Future<void> openScreen(
@@ -20,11 +22,14 @@ Future<void> openScreen(
   addTearDown(tester.view.reset);
   final payments = PaymentProvider(db: db ?? FakeDatabaseService());
   await payments.loadPayments(roomId: auth.isOwner ? null : auth.currentRoomId);
+  final holidays = HolidayProvider(service: FakeHolidayService());
+  await holidays.loadHolidays();
   await tester.pumpWidget(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: auth),
         ChangeNotifierProvider.value(value: payments),
+        ChangeNotifierProvider.value(value: holidays),
       ],
       child: const MaterialApp(home: PaymentsScreen()),
     ),
@@ -47,6 +52,13 @@ void main() {
     expect(find.text('Electricity'), findsNWidgets(2));
     expect(find.text('Add bill'), findsNothing);
     expect(find.text('Mark paid'), findsNothing);
+    // October bill: due Saturday the 10th, shown as Monday the 12th
+    expect(find.text('Due on 2026-10-12'), findsOneWidget);
+    expect(find.text('Moved from 2026-10-10 (Saturday)'), findsOneWidget);
+    expect(
+      find.text('Next due: 2026-10-12\nMoved from 2026-10-10 (Saturday)'),
+      findsOneWidget,
+    );
 
     // 50 kWh x 12 / 2 boarders = 300
     await tester.tap(find.text('Electricity solver'));
@@ -188,4 +200,34 @@ void main() {
     expect(find.text('October 2026'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'editing a bill dated outside the picker years opens the picker',
+    (tester) async {
+      // a bill saved before the picker was limited (e.g. 2 years ahead)
+      final far = DateTime.now().year + 2;
+      final db = FakeDatabaseService();
+      db.payments = [
+        Payment(
+          id: 'p9',
+          roomId: 'BH01-RM3',
+          month: '$far-01',
+          roomRent: 2500,
+          electricity: 700,
+          water: 150,
+          dueDate: '$far-01-10',
+        ),
+      ];
+      final auth = AuthProvider(db: FakeDatabaseService());
+      await auth.loginOwner('owner@bhoardmate.app', 'admin123');
+      await openScreen(tester, auth, db);
+
+      await tester.tap(find.byTooltip('Edit bill'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Change'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byType(DatePickerDialog), findsOneWidget);
+    },
+  );
 }

@@ -59,7 +59,11 @@ void main() {
     expect(find.text('Room BH01-RM2'), findsOneWidget);
     expect(find.text('Outstanding balance'), findsOneWidget);
     expect(find.text('₱ 3500.00'), findsOneWidget);
-    expect(find.text('Next due: 2026-10-10'), findsOneWidget);
+    // 2026-10-10 is a Saturday, so it moves to Monday the 12th
+    expect(
+      find.text('Next due: 2026-10-12\nMoved from 2026-10-10 (Saturday)'),
+      findsOneWidget,
+    );
     // newest 2 of 3
     expect(find.text('Pest control'), findsOneWidget);
     expect(find.text('Electricity rate increase'), findsOneWidget);

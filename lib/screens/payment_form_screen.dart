@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../app_theme.dart';
 import '../models/payment.dart';
 import '../providers/auth_provider.dart';
+import '../providers/holiday_provider.dart';
 import '../providers/payment_provider.dart';
 import '../widgets/electricity_solver.dart';
 
@@ -89,11 +90,19 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
   }
 
   Future<void> _pickDueDate() async {
+    // the years HolidayProvider loads, so the due date rule can check them
+    final first = DateTime(DateTime.now().year - 1);
+    final last = DateTime(DateTime.now().year + 1, 12, 31);
+    var initial = DateTime.tryParse(_dueDate) ?? DateTime.now();
+    // an older bill can have a date outside these years, and the picker
+    // throws if it starts outside them, so start at the nearest end
+    if (initial.isBefore(first)) initial = first;
+    if (initial.isAfter(last)) initial = last;
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.tryParse(_dueDate) ?? DateTime.now(),
-      firstDate: DateTime(2025),
-      lastDate: DateTime(2030),
+      initialDate: initial,
+      firstDate: first,
+      lastDate: last,
     );
     if (picked == null) return;
     setState(() {
@@ -164,6 +173,9 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final holidays = context.watch<HolidayProvider>();
+    final dueNote = holidays.dueDateNote(_dueDate);
+    final shownDate = holidays.dueDate(_dueDate);
     final rooms = context.watch<AuthProvider>().rooms;
 
     return Scaffold(
@@ -269,7 +281,14 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.event, color: AppColors.icon),
               title: const Text('Due date'),
-              subtitle: Text(_dueDate),
+              subtitle: Text(
+                // the bill keeps this date, boarders see the moved one
+                dueNote == null
+                    ? _dueDate
+                    : shownDate == _dueDate
+                    ? '$_dueDate\n$dueNote'
+                    : '$_dueDate\n$dueNote, boarders see $shownDate',
+              ),
               trailing: TextButton(
                 onPressed: _saving ? null : _pickDueDate,
                 child: const Text('Change'),

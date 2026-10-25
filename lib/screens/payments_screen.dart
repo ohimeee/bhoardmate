@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../app_theme.dart';
 import '../models/payment.dart';
 import '../providers/auth_provider.dart';
+import '../providers/holiday_provider.dart';
 import '../providers/payment_provider.dart';
 import '../widgets/balance_card.dart';
 import '../widgets/electricity_solver.dart';
@@ -115,7 +116,9 @@ class PaymentsScreen extends StatelessWidget {
     Payment payment,
     bool isOwner,
     String? boarderName,
+    HolidayProvider holidays,
   ) {
+    final dueNote = holidays.dueDateNote(payment.dueDate);
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
@@ -154,9 +157,15 @@ class PaymentsScreen extends StatelessWidget {
             Text(
               payment.isPaid
                   ? 'Paid on ${payment.paidDate ?? '-'}'
-                  : 'Due on ${payment.dueDate}',
+                  : 'Due on ${holidays.dueDate(payment.dueDate)}',
               style: const TextStyle(color: AppColors.textLight),
             ),
+            // holiday or weekend: say why the date moved
+            if (!payment.isPaid && dueNote != null)
+              Text(
+                dueNote,
+                style: const TextStyle(fontSize: 12, color: AppColors.icon),
+              ),
             if (isOwner) ...[
               const SizedBox(height: 8),
               Row(
@@ -190,7 +199,14 @@ class PaymentsScreen extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final provider = context.watch<PaymentProvider>();
     final payments = provider.payments;
+    final holidays = context.watch<HolidayProvider>();
     final nextDue = provider.nextDueDate;
+    String subtitle = 'All paid';
+    if (nextDue != null) {
+      subtitle = 'Next due: ${holidays.dueDate(nextDue)}';
+      final note = holidays.dueDateNote(nextDue);
+      if (note != null) subtitle = '$subtitle\n$note';
+    }
 
     Widget body;
     if (provider.isLoading) {
@@ -211,7 +227,7 @@ class PaymentsScreen extends StatelessWidget {
                 ? 'Unpaid total (all rooms)'
                 : 'Outstanding balance',
             amount: provider.outstandingBalance,
-            subtitle: nextDue == null ? 'All paid' : 'Next due: $nextDue',
+            subtitle: subtitle,
           ),
           // a failed refresh keeps the old bills, so say they may be old
           if (provider.errorMessage != null) ...[
@@ -244,6 +260,7 @@ class PaymentsScreen extends StatelessWidget {
                     .where((r) => r.id == payment.roomId)
                     .map((r) => r.boarderName)
                     .firstOrNull,
+                holidays,
               ),
         ],
       );
