@@ -1,5 +1,6 @@
 import 'package:bhoardmate/models/holiday.dart';
 import 'package:bhoardmate/providers/holiday_provider.dart';
+import 'package:bhoardmate/services/holiday_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fake_holiday_service.dart';
@@ -7,10 +8,12 @@ import 'fake_holiday_service.dart';
 void main() {
   final year = DateTime.now().year;
 
-  test('loads this year and next year from the API', () async {
+  test('loads last year, this year and next year from the API', () async {
     final provider = HolidayProvider(service: FakeHolidayService());
     await provider.loadHolidays();
-    expect(provider.holidays.length, 4);
+    expect(provider.holidays.length, 6);
+    expect(provider.hasHolidaysFor(year - 1), isTrue);
+    expect(provider.hasHolidaysFor(year + 2), isFalse);
     expect(provider.holidays.last.date, DateTime(year + 1, 12, 25));
     expect(provider.isLoading, isFalse);
     expect(provider.isOffline, isFalse);
@@ -46,7 +49,7 @@ void main() {
     service.offline = false;
     await provider.loadHolidays();
     expect(provider.errorMessage, isNull);
-    expect(provider.holidays.length, 4);
+    expect(provider.holidays.length, 6);
   });
 
   test('past holidays are not upcoming', () async {
@@ -136,7 +139,7 @@ void main() {
     },
   );
 
-  test('weekend rule still works with no holidays loaded', () async {
+  test('no holidays loaded: weekends still move, the note warns', () async {
     final provider = HolidayProvider(
       service: FakeHolidayService()..offline = true,
     );
@@ -146,7 +149,47 @@ void main() {
     expect(provider.dueDate('2026-10-10'), '2026-10-12');
     expect(
       provider.dueDateNote('2026-10-10'),
-      'Moved from 2026-10-10 (Saturday)',
+      'Moved from 2026-10-10 (Saturday), holidays not loaded, only weekends checked',
+    );
+    // Bonifacio Day (Monday) can't be known without the list: say so
+    expect(provider.dueDate('2026-11-30'), '2026-11-30');
+    expect(
+      provider.dueDateNote('2026-11-30'),
+      'holidays not loaded, only weekends checked',
     );
   });
+
+  test('a year outside the loaded years warns instead of guessing', () async {
+    final provider = HolidayProvider(service: FakeHolidayService());
+    await provider.loadHolidays();
+    // loaded: last, this and next year. Two years ahead is not
+    final far = DateTime(year + 2, 3, 1);
+    final text = far.toIso8601String().substring(0, 10);
+    expect(provider.dueDateNote(text), contains('holidays not loaded'));
+  });
+
+  test('one year failing keeps the other years', () async {
+    final service = PartlyOfflineHolidayService(year + 1);
+    final provider = HolidayProvider(service: service);
+    await provider.loadHolidays();
+    expect(provider.hasHolidaysFor(year), isTrue);
+    expect(provider.hasHolidaysFor(year + 1), isFalse);
+    expect(provider.errorMessage, isNull);
+    expect(provider.holidays.length, 4);
+  });
+}
+
+// API works for every year except one
+class PartlyOfflineHolidayService extends FakeHolidayService {
+  final int failingYear;
+
+  PartlyOfflineHolidayService(this.failingYear);
+
+  @override
+  Future<List<Holiday>> fetchHolidays(int year) async {
+    if (year == failingYear) {
+      throw const HolidayException('No internet connection.');
+    }
+    return super.fetchHolidays(year);
+  }
 }

@@ -16,11 +16,15 @@ class HolidayProvider extends ChangeNotifier {
   String? _errorMessage;
   // true = no internet, showing the list saved last time
   bool _isOffline = false;
+  // years we really have holidays for (API or saved list)
+  Set<int> _years = {};
 
   List<Holiday> get holidays => _holidays;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isOffline => _isOffline;
+
+  bool hasHolidaysFor(int year) => _years.contains(year);
 
   // from today on, for the News tab
   List<Holiday> get upcomingHolidays {
@@ -69,40 +73,57 @@ class HolidayProvider extends ChangeNotifier {
     return nextWorkingDay(parsed).toIso8601String().substring(0, 10);
   }
 
-  // 'Moved from 2026-11-30 (Bonifacio Day)', null if the date didn't move
+  // 'Moved from 2026-11-30 (Bonifacio Day)', null if the date didn't move.
+  // also says so when the holidays of that year are missing, so a
+  // weekday holiday never stays on the bill without a warning
   String? dueDateNote(String date) {
     final parsed = DateTime.tryParse(date);
     if (parsed == null) return null;
     final reason = dayOffReason(parsed);
+    final moved = nextWorkingDay(parsed);
+    final missing = !hasHolidaysFor(parsed.year) || !hasHolidaysFor(moved.year);
+    if (missing) {
+      final check = _isLoading
+          ? 'checking holidays...'
+          : 'holidays not loaded, only weekends checked';
+      return reason == null ? check : 'Moved from $date ($reason), $check';
+    }
     if (reason == null) return null;
     return 'Moved from $date ($reason)';
   }
 
-  // this year and next year, so a December due date can move into January
+  // last year (unpaid old bills), this year and next year (a December
+  // due date can move into January). Each year on its own: if one fails
+  // we still use the others, and remember which years we really have
   Future<void> loadHolidays() async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
-    final year = DateTime.now().year;
-    try {
-      final thisYear = await _service.fetchHolidays(year);
-      final nextYear = await _service.fetchHolidays(year + 1);
-      _holidays = [...thisYear, ...nextYear];
-      _isOffline = false;
-    } on HolidayException catch (e) {
-      // API failed: use the saved list if we have one
-      final saved = [
-        ...await _service.getSavedHolidays(year),
-        ...await _service.getSavedHolidays(year + 1),
-      ];
-      if (saved.isEmpty) {
-        _holidays = [];
-        _isOffline = false;
-        _errorMessage = 'Could not load holidays. ${e.message}';
-      } else {
-        _holidays = saved;
-        _isOffline = true;
+    final now = DateTime.now().year;
+    final list = <Holiday>[];
+    final years = <int>{};
+    bool usedSaved = false;
+    String? lastError;
+    for (final year in [now - 1, now, now + 1]) {
+      try {
+        list.addAll(await _service.fetchHolidays(year));
+        years.add(year);
+      } on HolidayException catch (e) {
+        // API failed: use the saved list for that year if we have one
+        final saved = await _service.getSavedHolidays(year);
+        if (saved.isNotEmpty) {
+          list.addAll(saved);
+          years.add(year);
+          usedSaved = true;
+        }
+        lastError = e.message;
       }
+    }
+    _holidays = list;
+    _years = years;
+    _isOffline = usedSaved;
+    if (years.isEmpty && lastError != null) {
+      _errorMessage = 'Could not load holidays. $lastError';
     }
     _isLoading = false;
     notifyListeners();
