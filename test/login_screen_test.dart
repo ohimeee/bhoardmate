@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'fake_database_service.dart';
+import 'fake_holiday_service.dart';
 
 Future<void> openLogin(WidgetTester tester, AuthProvider auth) async {
   await tester.pumpWidget(
@@ -24,7 +25,9 @@ Future<void> openLogin(WidgetTester tester, AuthProvider auth) async {
         ChangeNotifierProvider(
           create: (_) => ConcernProvider(db: FakeDatabaseService()),
         ),
-        ChangeNotifierProvider(create: (_) => HolidayProvider()),
+        ChangeNotifierProvider(
+          create: (_) => HolidayProvider(service: FakeHolidayService()),
+        ),
       ],
       child: const MaterialApp(home: LoginScreen()),
     ),
