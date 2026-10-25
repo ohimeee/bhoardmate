@@ -5,6 +5,7 @@ import '../models/announcement.dart';
 import '../providers/announcement_provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/holiday_section.dart';
 
 class AnnouncementsScreen extends StatefulWidget {
   const AnnouncementsScreen({super.key});
@@ -128,27 +129,46 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
           ? const Center(
               child: Text('Please log in again to view announcements.'),
             )
+          // holidays stay on top even when announcements fail or are empty
           : error != null
-          ? EmptyState(
-              icon: Icons.error_outline,
-              title: error,
-              buttonLabel: 'Retry',
-              onPressed: loading || _busy ? null : _load,
+          ? ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                const HolidaySection(),
+                EmptyState(
+                  icon: Icons.error_outline,
+                  title: error,
+                  buttonLabel: 'Retry',
+                  onPressed: loading || _busy ? null : _load,
+                ),
+              ],
             )
           : loading
           ? const Center(child: CircularProgressIndicator())
           : announcements.isEmpty
-          ? const EmptyState(
-              icon: Icons.campaign_outlined,
-              title: 'No announcements yet',
-              message: 'Boarding house updates will appear here.',
+          ? ListView(
+              padding: const EdgeInsets.all(16),
+              children: const [
+                HolidaySection(),
+                EmptyState(
+                  icon: Icons.campaign_outlined,
+                  title: 'No announcements yet',
+                  message: 'Boarding house updates will appear here.',
+                ),
+              ],
             )
           : ListView.builder(
-              // Johnmarc adds the holiday section in #15.
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-              itemCount: announcements.length,
+              // first item = holiday card, then the announcements
+              itemCount: announcements.length + 1,
               itemBuilder: (context, index) {
-                final announcement = announcements[index];
+                if (index == 0) {
+                  return const Padding(
+                    padding: EdgeInsets.only(bottom: 16),
+                    child: HolidaySection(),
+                  );
+                }
+                final announcement = announcements[index - 1];
                 return Card(
                   margin: const EdgeInsets.only(bottom: 16),
                   child: Padding(
