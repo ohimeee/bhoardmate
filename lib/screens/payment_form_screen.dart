@@ -90,12 +90,19 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
   }
 
   Future<void> _pickDueDate() async {
+    // the years HolidayProvider loads, so the due date rule can check them
+    final first = DateTime(DateTime.now().year - 1);
+    final last = DateTime(DateTime.now().year + 1, 12, 31);
+    var initial = DateTime.tryParse(_dueDate) ?? DateTime.now();
+    // an older bill can have a date outside these years, and the picker
+    // throws if it starts outside them, so start at the nearest end
+    if (initial.isBefore(first)) initial = first;
+    if (initial.isAfter(last)) initial = last;
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.tryParse(_dueDate) ?? DateTime.now(),
-      // the years HolidayProvider loads, so the due date rule can check them
-      firstDate: DateTime(DateTime.now().year - 1),
-      lastDate: DateTime(DateTime.now().year + 1, 12, 31),
+      initialDate: initial,
+      firstDate: first,
+      lastDate: last,
     );
     if (picked == null) return;
     setState(() {
