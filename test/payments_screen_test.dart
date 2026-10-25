@@ -200,4 +200,34 @@ void main() {
     expect(find.text('October 2026'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'editing a bill dated outside the picker years opens the picker',
+    (tester) async {
+      // a bill saved before the picker was limited (e.g. 2 years ahead)
+      final far = DateTime.now().year + 2;
+      final db = FakeDatabaseService();
+      db.payments = [
+        Payment(
+          id: 'p9',
+          roomId: 'BH01-RM3',
+          month: '$far-01',
+          roomRent: 2500,
+          electricity: 700,
+          water: 150,
+          dueDate: '$far-01-10',
+        ),
+      ];
+      final auth = AuthProvider(db: FakeDatabaseService());
+      await auth.loginOwner('owner@bhoardmate.app', 'admin123');
+      await openScreen(tester, auth, db);
+
+      await tester.tap(find.byTooltip('Edit bill'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Change'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byType(DatePickerDialog), findsOneWidget);
+    },
+  );
 }
