@@ -1,5 +1,8 @@
-import 'package:bhoardmate/providers/announcement_provider.dart';
+import 'dart:async';
+
+import 'package:bhoardmate/models/announcement.dart';
 import 'package:bhoardmate/models/holiday.dart';
+import 'package:bhoardmate/providers/announcement_provider.dart';
 import 'package:bhoardmate/providers/auth_provider.dart';
 import 'package:bhoardmate/providers/holiday_provider.dart';
 import 'package:bhoardmate/screens/announcements_screen.dart';
@@ -16,6 +19,7 @@ Future<void> openScreen(
   AuthProvider auth, {
   FakeDatabaseService? db,
   FakeHolidayService? holidayService,
+  bool settle = true,
 }) async {
   // tall screen so the holiday card and the announcements are all built
   tester.view.physicalSize = const Size(800, 3000);
@@ -37,7 +41,24 @@ Future<void> openScreen(
       child: const MaterialApp(home: AnnouncementsScreen()),
     ),
   );
-  await tester.pumpAndSettle();
+  // a spinner that never stops would make pumpAndSettle time out
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
+    await tester.pump();
+  }
+}
+
+// announcements that only arrive when the test says so (slow internet)
+class SlowDatabaseService extends FakeDatabaseService {
+  final gate = Completer<void>();
+
+  @override
+  Future<List<Announcement>> getAnnouncements() async {
+    await gate.future;
+    return super.getAnnouncements();
+  }
 }
 
 void main() {
@@ -226,5 +247,31 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Offline: showing the saved list.'), findsOneWidget);
     expect(find.text("New Year's Day"), findsOneWidget);
+  });
+
+  testWidgets('holidays stay visible while announcements are loading', (
+    tester,
+  ) async {
+    final auth = AuthProvider(db: FakeDatabaseService());
+    await auth.loginBoarder('BH01-RM2', '2222');
+    final db = SlowDatabaseService();
+    final service = FakeHolidayService()..online = nextYearHolidays();
+    await openScreen(
+      tester,
+      auth,
+      db: db,
+      holidayService: service,
+      settle: false,
+    );
+
+    // announcements still loading: spinner, but the holiday card is there
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('Upcoming PH holidays'), findsOneWidget);
+    expect(find.text("New Year's Day"), findsOneWidget);
+
+    db.gate.complete();
+    await tester.pumpAndSettle();
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('Pest control'), findsOneWidget);
   });
 }
