@@ -24,7 +24,7 @@ Both members contribute to Git/GitHub, review and testing.
 - News displays Philippine public holidays from Nager.Date with loading, retry and saved-list offline states. Displayed due dates move past weekends and loaded holidays; the original bill date stays in Firestore. Missing holiday years show a warning.
 - Forms include validation, lists have empty/loading/error states, and deletion requires confirmation. The app has a custom launcher icon, native splash and animated startup.
 
-These describe the implemented code. See the build verification below for what was actually checked on the emulator and which end-to-end checks remain pending.
+See build verification below for completed emulator checks and remaining end-to-end testing.
 
 ## Screenshots
 
@@ -71,9 +71,14 @@ The updated captures replace the older theme/profile/Rooms views. [Owner profile
    flutter run -d emulator-5554
    ```
 
-   Substitute the listed ID if it differs. Use the owner's email/password or the boarder's Room ID/current access code supplied by Johnmarc. Historical sample credentials are not guaranteed to work against the live project.
+   Substitute the listed ID if it differs.
 
-Internet is needed for initial authentication and live Firebase data. Holiday offline mode uses the last successful response saved on that device; it is not a guarantee that every app feature works offline.
+   | Demo login | Credentials |
+   | --- | --- |
+   | Boarder | Room ID: `BH01-RM2` · Access code: `2222` |
+   | Owner | Ask the team for the owner email/password. |
+
+Internet is needed for initial authentication and live Firebase data. Holiday offline mode uses the last successful response saved on that device.
 
 ## Packages
 
@@ -115,7 +120,7 @@ The holiday endpoint is `GET https://date.nager.at/api/v3/PublicHolidays/{year}/
 
 The recorded fix sets `heroTag: null` on the Payments floating action button in [payments_screen.dart](lib/screens/payments_screen.dart), disabling its Hero participation. The tab does not need a shared-element transition. The PR reports 47 passing tests at that point; the later October 26 check passed all 82 existing tests and opened the release boarder tabs. That boarder check does not exercise the owner's floating action button path.
 
-The debugging evidence added in [PR #52](https://github.com/ohimeee/bhoardmate/pull/52) includes the failing `flutter test test/login_screen_test.dart` output. The `owner switch logs in and opens Home` test raises a scheduler assertion for multiple Heroes with the default FloatingActionButton tag. Reading that assertion and its `Hero._allHeroesFor` stack frames identifies the shared-tag conflict. The after-fix output shows all six login tests passing. This evidence documents stack-trace debugging; it does not claim a DevTools session.
+The before-fix picture in [PR #52](https://github.com/ohimeee/bhoardmate/pull/52) shows the failure reproduced on October 26, 2026. Running `flutter test test/login_screen_test.dart` fails at `owner switch logs in and opens Home`: the assertion and `Hero._allHeroesFor` stack frames identify duplicate default FloatingActionButton tags. The after-fix output shows all six login tests passing. This documents stack-trace debugging.
 
 | Before the fix | After the fix |
 | --- | --- |
