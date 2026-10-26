@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="980" viewBox="0 0 1200 980">
+  <style>
+    .title { font: 600 64px Poppins, 'Segoe UI', Arial, sans-serif; fill: #1F2328; letter-spacing: -1px; }
+    .sub { font: 400 22px Poppins, 'Segoe UI', Arial, sans-serif; fill: #6B7280; }
+    .hex { font: 500 26px 'Consolas', 'Courier New', monospace; }
+    .role { font: 500 18px Poppins, 'Segoe UI', Arial, sans-serif; }
+    .dark { fill: #1F2328; }
+    .light { fill: #FFFFFF; }
+  </style>
+
+  <rect width="1200" height="980" fill="#FFFFFF"/>
+
+  <!-- card 1: core colors -->
+  <text x="48" y="96" class="title">BhoardMate</text>
+  <text x="1152" y="96" class="sub" text-anchor="end">Core colors</text>
+
+  <rect x="0" y="140" width="240" height="300" fill="#FAF6EE"/>
+  <rect x="240" y="140" width="240" height="300" fill="#2E6B4F"/>
+  <rect x="480" y="140" width="240" height="300" fill="#D8F0E0"/>
+  <rect x="720" y="140" width="240" height="300" fill="#D9534F"/>
+  <rect x="960" y="140" width="240" height="300" fill="#5B5BD6"/>
+  <line x1="0" y1="140" x2="1200" y2="140" stroke="#ECE6DA" stroke-width="2"/>
+
+  <text x="24" y="176" class="role dark">Background</text>
+  <text x="264" y="176" class="role light">Primary</text>
+  <text x="504" y="176" class="role dark">Paid / Done</text>
+  <text x="744" y="176" class="role light">Unpaid / Error</text>
+  <text x="984" y="176" class="role light">Icon accent</text>
+
+  <text x="216" y="420" class="hex dark" text-anchor="end">#FAF6EE</text>
+  <text x="456" y="420" class="hex light" text-anchor="end">#2E6B4F</text>
+  <text x="696" y="420" class="hex dark" text-anchor="end">#D8F0E0</text>
+  <text x="936" y="420" class="hex light" text-anchor="end">#D9534F</text>
+  <text x="1176" y="420" class="hex light" text-anchor="end">#5B5BD6</text>
+
+  <!-- card 2: feature tiles -->
+  <text x="48" y="586" class="title">Feature tiles</text>
+  <text x="1152" y="586" class="sub" text-anchor="end">Home screen pastels</text>
+
+  <rect x="0" y="630" width="240" height="300" fill="#DDF1E4"/>
+  <rect x="240" y="630" width="240" height="300" fill="#DCEBFA"/>
+  <rect x="480" y="630" width="240" height="300" fill="#FDE7D3"/>
+  <rect x="720" y="630" width="240" height="300" fill="#FADCDC"/>
+  <rect x="960" y="630" width="240" height="300" fill="#E7E2F8"/>
+
+  <text x="24" y="666" class="role dark">Payments</text>
+  <text x="264" y="666" class="role dark">Announcements</text>
+  <text x="504" y="666" class="role dark">Members</text>
+  <text x="744" y="666" class="role dark">Concerns</text>
+  <text x="984" y="666" class="role dark">Rooms</text>
+
+  <text x="216" y="910" class="hex dark" text-anchor="end">#DDF1E4</text>
+  <text x="456" y="910" class="hex dark" text-anchor="end">#DCEBFA</text>
+  <text x="696" y="910" class="hex dark" text-anchor="end">#FDE7D3</text>
+  <text x="936" y="910" class="hex dark" text-anchor="end">#FADCDC</text>
+  <text x="1176" y="910" class="hex dark" text-anchor="end">#E7E2F8</text>
+</svg>
