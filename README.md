@@ -2,6 +2,16 @@
 
 A Flutter app that helps boarding house owners and boarders track rent, split electricity bills, and share announcements and concerns in one place. A way to converge technology into our business owners' workflow for convenience, efficiency and transparency.
 
+## Download
+
+<p align="center">
+  <a href="https://github.com/ohimeee/bhoardmate/releases/latest"><img src="https://img.shields.io/github/v/release/ohimeee/bhoardmate?label=Stable&color=2E6B4F" alt="Stable release"></a>
+</p>
+
+<p align="center"><em>Requires Android 7.0 or higher.</em></p>
+
+Download [BHoardMate-v1.0.0.apk](https://github.com/ohimeee/bhoardmate/releases/download/v1.0.0/BHoardMate-v1.0.0.apk) from the [v1.0.0 release](https://github.com/ohimeee/bhoardmate/releases/tag/v1.0.0) and install it on the phone (allow "Install unknown apps" for your browser or file manager). Demo boarder: `BH01-RM2` / `2222`.
+
 ## Members
 
 SE2142 final project, Group BJ.
@@ -182,3 +192,13 @@ SHA-256 checksums for these APKs:
 app-debug.apk   6999df1bbbc75b507beec52ad1ca5008b65b9e8c36062a4d6667b97b0512d4f6
 app-release.apk f0a20982964094f8a394e5d7d1c1aeb511cf1aa6170a72b373e7111d1589406c
 ```
+
+## Credits
+
+BHoardMate uses the [Nager.Date](https://date.nager.at) public holiday API, [Firebase](https://firebase.google.com) (Cloud Firestore and Authentication) and the [Flutter](https://flutter.dev) packages listed above. The Poppins font is from [Google Fonts](https://fonts.google.com/specimen/Poppins).
+
+Thank you to everyone who contributed to BHoardMate!
+
+<a href="https://github.com/ohimeee/bhoardmate/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=ohimeee/bhoardmate&max=2" alt="Contributors">
+</a>
