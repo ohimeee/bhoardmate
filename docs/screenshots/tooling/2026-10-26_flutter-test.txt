@@ -1,0 +1,84 @@
+00:00 +0: loading test/announcements_screen_test.dart
+00:00 +0: test/announcement_provider_test.dart: loads newest first and new posts arrive through the stream
+00:00 +1: test/announcement_provider_test.dart: clear forgets the list after logout
+00:00 +2: test/announcement_provider_test.dart: a load still running at logout is ignored
+00:00 +3: test/announcement_provider_test.dart: a good snapshot after a stream error clears the error
+00:00 +4: test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:00 +5: test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:00 +6: test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:00 +7: test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:00 +8: test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:00 +9: test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:00 +10: test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:01 +11: test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:01 +12: test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:01 +13: test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:01 +14: test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:01 +15: test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:02 +16: test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:02 +17: test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:02 +18: test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:02 +19: test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:02 +20: test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:02 +21: test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:02 +22: test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:02 +23: test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:02 +24: test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:02 +25: test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:02 +26: test/announcements_screen_test.dart: owner validates, creates, edits and confirms deletion
+00:03 +27: test/announcements_screen_test.dart: owner validates, creates, edits and confirms deletion
+00:03 +28: test/announcements_screen_test.dart: owner validates, creates, edits and confirms deletion
+00:03 +29: test/announcements_screen_test.dart: owner validates, creates, edits and confirms deletion
+00:03 +30: test/announcements_screen_test.dart: owner validates, creates, edits and confirms deletion
+00:03 +31: test/empty_states_test.dart: No announcements yet uses the shared empty state
+00:03 +32: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:03 +33: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:03 +34: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:03 +35: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:03 +36: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:03 +37: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:03 +38: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:03 +39: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:03 +40: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:03 +41: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +42: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +43: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +44: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +45: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +46: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +47: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +48: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +49: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +50: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +51: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +52: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +53: test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +54: test/login_screen_test.dart: owner email rejects incomplete and spaced addresses
+00:04 +55: test/login_screen_test.dart: owner email rejects incomplete and spaced addresses
+00:05 +56: test/login_screen_test.dart: owner email rejects incomplete and spaced addresses
+00:05 +57: test/owner_profile_screen_test.dart: owner form validates and passes profile fields to save action
+00:05 +58: test/owner_profile_screen_test.dart: owner form validates and passes profile fields to save action
+00:05 +59: test/owner_profile_screen_test.dart: owner form validates and passes profile fields to save action
+00:05 +60: test/payments_screen_test.dart: finite bill amounts cannot overflow the total
+00:05 +61: test/payments_screen_test.dart: finite bill amounts cannot overflow the total
+00:06 +62: test/payments_screen_test.dart: finite bill amounts cannot overflow the total
+00:06 +63: test/members_screen_test.dart: boarder validates and saves their own profile
+00:06 +64: test/members_screen_test.dart: boarder validates and saves their own profile
+00:06 +65: test/rooms_screen_test.dart: editing rent validates and preserves the code and all boarder fields
+00:06 +66: test/rooms_screen_test.dart: editing rent validates and preserves the code and all boarder fields
+00:06 +67: test/rooms_screen_test.dart: editing rent validates and preserves the code and all boarder fields
+00:06 +68: test/splash_screen_test.dart: splash keeps its wordmark on login at Size(411.0, 914.0)
+00:06 +69: test/login_screen_test.dart: owner switch logs in and opens Home
+00:06 +70: test/payments_screen_test.dart: owner marks paid, adds a bill and deletes it
+00:06 +71: test/payments_screen_test.dart: owner marks paid, adds a bill and deletes it
+00:06 +72: test/payments_screen_test.dart: owner marks paid, adds a bill and deletes it
+00:06 +73: test/payments_screen_test.dart: owner marks paid, adds a bill and deletes it
+00:07 +74: test/payments_screen_test.dart: owner marks paid, adds a bill and deletes it
+00:07 +75: test/payments_screen_test.dart: owner marks paid, adds a bill and deletes it
+00:07 +76: test/payments_screen_test.dart: owner marks paid, adds a bill and deletes it
+00:07 +77: test/rooms_screen_test.dart: reset requires confirmation and clears boarder fields preserving room and rent
+00:07 +78: test/payments_screen_test.dart: editing keeps the cents and rejects NaN and Infinity
+00:07 +79: test/payments_screen_test.dart: editing keeps the cents and rejects NaN and Infinity
+00:07 +80: test/payments_screen_test.dart: a failed refresh shows the error above the old bills
+00:08 +81: test/payments_screen_test.dart: editing a bill dated outside the picker years opens the picker
+00:08 +82: All tests passed!

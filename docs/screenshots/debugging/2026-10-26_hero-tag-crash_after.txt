@@ -1,0 +1,8 @@
+00:00 +0: loading test/login_screen_test.dart
+00:00 +0: owner email rejects incomplete and spaced addresses
+00:01 +1: boarder form validates and shows a wrong code error
+00:02 +2: boarder form logs in and opens Home
+00:03 +3: owner switch logs in and opens Home
+00:04 +4: saved Firebase login skips the login screen
+00:04 +5: a reset code logs the boarder out to the login screen
+00:05 +6: All tests passed!
