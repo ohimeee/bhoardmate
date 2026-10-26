@@ -9,7 +9,7 @@ import 'providers/auth_provider.dart';
 import 'providers/concern_provider.dart';
 import 'providers/holiday_provider.dart';
 import 'providers/payment_provider.dart';
-import 'screens/login_screen.dart';
+import 'screens/splash_screen.dart';
 
 // Firebase has to start before the app uses Firestore or Auth
 void main() async {
@@ -35,7 +35,7 @@ class BhoardMateApp extends StatelessWidget {
         title: 'BHoardMate',
         debugShowCheckedModeBanner: false,
         theme: appTheme(),
-        home: const LoginScreen(),
+        home: const SplashScreen(),
       ),
     );
   }
