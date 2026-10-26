@@ -3,6 +3,8 @@
 Splash → login hand-off for the Android app. 1080 × 2400 design canvas, 60 fps, **3.2 s** total
 (`AnimationController(duration: Duration(milliseconds: 3200))`).
 
+These notes preserve the original animation design. The MP4/GIF exports and Flutter 3.47 validation mentioned in that design are historical references, not artifacts or verification supplied by this repository. The project build was checked with Flutter 3.44.9 and Dart 3.12.2; see the [README build verification](../../../README.md#build-verification--october-26-2026). Pixel-difference figures below are recorded design claims, not checks rerun for this PR.
+
 Only the existing logo shapes are animated (paths copied 1:1 from `../logo/*.svg`), only the three brand colours are used,
 and the key frames were checked pixel-for-pixel against the logo files:
 
@@ -16,10 +18,10 @@ and the key frames were checked pixel-for-pixel against the logo files:
 
 | File | What it is |
 |---|---|
-| `bhoardmate-splash.mp4` | 1080 × 2400, 60 fps, H.264, BT.709 |
-| `bhoardmate-splash-preview.gif` | 540 × 1200, 30 fps preview |
-| `bhoardmate-splash.json` | Lottie (v5.7, 60 fps, 192 frames, 86 KB). Plays with the `lottie` Flutter package. Markers: `handoff_start` (frame 154), `end` (191) |
-| `bhoardmate_splash.dart` | Drop-in Flutter widget (no packages): `BHoardMateSplash(onFinished: …)`. Analyzer-clean on Flutter 3.47; its rendered frames were diffed against the MP4 frames |
+| `bhoardmate-splash.mp4` | Historical export: 1080 × 2400, 60 fps, H.264, BT.709. Not included in the repository. |
+| `bhoardmate-splash-preview.gif` | Historical 540 × 1200, 30 fps preview. Not included in the repository. |
+| [bhoardmate-splash.json](bhoardmate-splash.json) | Included Lottie design reference (v5.7, 60 fps, 192 frames). The app uses the Dart widget below; it has no `lottie` dependency. |
+| [bhoardmate_splash.dart](../../../lib/widgets/bhoardmate_splash.dart) | Runtime Flutter widget: `BHoardMateSplash(onFinished: …)`, without extra animation packages. The original design notes reported Flutter 3.47 analysis and comparison against MP4 frames; those checks are not reproduced here. |
 
 ## The story (5 + 1 steps)
 
