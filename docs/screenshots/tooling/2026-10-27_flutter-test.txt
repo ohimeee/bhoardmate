@@ -1,0 +1,88 @@
+00:00 +0: loading C:/Users/User/bhoardmate/test/announcements_screen_test.dart
+00:00 +0: C:/Users/User/bhoardmate/test/announcement_provider_test.dart: loads newest first and new posts arrive through the stream
+00:00 +1: C:/Users/User/bhoardmate/test/announcement_provider_test.dart: clear forgets the list after logout
+00:00 +2: C:/Users/User/bhoardmate/test/announcement_provider_test.dart: a load still running at logout is ignored
+00:00 +3: C:/Users/User/bhoardmate/test/announcement_provider_test.dart: a good snapshot after a stream error clears the error
+00:00 +4: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:00 +5: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:00 +6: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:00 +7: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:00 +8: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:00 +9: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:00 +10: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:00 +11: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:00 +12: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:00 +13: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:00 +14: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: boarder reads newest announcements without owner actions
+00:01 +15: C:/Users/User/bhoardmate/test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:01 +16: C:/Users/User/bhoardmate/test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:01 +17: C:/Users/User/bhoardmate/test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:01 +18: C:/Users/User/bhoardmate/test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:01 +19: C:/Users/User/bhoardmate/test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:01 +20: C:/Users/User/bhoardmate/test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:01 +21: C:/Users/User/bhoardmate/test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:01 +22: C:/Users/User/bhoardmate/test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:01 +23: C:/Users/User/bhoardmate/test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:01 +24: C:/Users/User/bhoardmate/test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:01 +25: C:/Users/User/bhoardmate/test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:02 +26: C:/Users/User/bhoardmate/test/concerns_screen_test.dart: boarder validates and reports only for their room
+00:02 +27: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: owner validates, creates, edits and confirms deletion
+00:02 +28: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: owner validates, creates, edits and confirms deletion
+00:02 +29: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: owner validates, creates, edits and confirms deletion
+00:02 +30: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: owner validates, creates, edits and confirms deletion
+00:03 +31: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: owner validates, creates, edits and confirms deletion
+00:03 +32: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: owner validates, creates, edits and confirms deletion
+00:03 +33: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: owner validates, creates, edits and confirms deletion
+00:03 +34: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: owner validates, creates, edits and confirms deletion
+00:03 +35: C:/Users/User/bhoardmate/test/announcements_screen_test.dart: owner validates, creates, edits and confirms deletion
+00:03 +36: C:/Users/User/bhoardmate/test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:03 +37: C:/Users/User/bhoardmate/test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +38: C:/Users/User/bhoardmate/test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +39: C:/Users/User/bhoardmate/test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +40: C:/Users/User/bhoardmate/test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +41: C:/Users/User/bhoardmate/test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +42: C:/Users/User/bhoardmate/test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +43: C:/Users/User/bhoardmate/test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +44: C:/Users/User/bhoardmate/test/home_screen_test.dart: boarder sees name, balance, due date and latest news
+00:04 +45: C:/Users/User/bhoardmate/test/login_screen_test.dart: owner email rejects incomplete and spaced addresses
+00:04 +46: C:/Users/User/bhoardmate/test/login_screen_test.dart: owner email rejects incomplete and spaced addresses
+00:04 +47: C:/Users/User/bhoardmate/test/login_screen_test.dart: owner email rejects incomplete and spaced addresses
+00:05 +48: C:/Users/User/bhoardmate/test/login_screen_test.dart: owner email rejects incomplete and spaced addresses
+00:05 +49: C:/Users/User/bhoardmate/test/main_screen_test.dart: back on Pay tab goes to Home and keeps the app open
+00:05 +50: C:/Users/User/bhoardmate/test/main_screen_test.dart: back on Pay tab goes to Home and keeps the app open
+00:05 +51: C:/Users/User/bhoardmate/test/main_screen_test.dart: back on Pay tab goes to Home and keeps the app open
+00:05 +52: C:/Users/User/bhoardmate/test/main_screen_test.dart: back on Pay tab goes to Home and keeps the app open
+00:05 +53: C:/Users/User/bhoardmate/test/owner_profile_screen_test.dart: owner form validates and passes profile fields to save action
+00:05 +54: C:/Users/User/bhoardmate/test/owner_profile_screen_test.dart: owner form validates and passes profile fields to save action
+00:05 +55: C:/Users/User/bhoardmate/test/owner_profile_screen_test.dart: owner form validates and passes profile fields to save action
+00:05 +56: C:/Users/User/bhoardmate/test/owner_profile_screen_test.dart: owner form validates and passes profile fields to save action
+00:05 +57: C:/Users/User/bhoardmate/test/owner_profile_screen_test.dart: owner form validates and passes profile fields to save action
+00:05 +58: C:/Users/User/bhoardmate/test/owner_profile_screen_test.dart: owner form validates and passes profile fields to save action
+00:05 +59: C:/Users/User/bhoardmate/test/owner_profile_screen_test.dart: owner form validates and passes profile fields to save action
+00:05 +60: C:/Users/User/bhoardmate/test/owner_profile_screen_test.dart: owner form validates and passes profile fields to save action
+00:06 +61: C:/Users/User/bhoardmate/test/owner_profile_screen_test.dart: owner form validates and passes profile fields to save action
+00:06 +62: C:/Users/User/bhoardmate/test/payments_screen_test.dart: finite bill amounts cannot overflow the total
+00:06 +63: C:/Users/User/bhoardmate/test/payments_screen_test.dart: finite bill amounts cannot overflow the total
+00:06 +64: C:/Users/User/bhoardmate/test/payments_screen_test.dart: finite bill amounts cannot overflow the total
+00:06 +65: C:/Users/User/bhoardmate/test/payments_screen_test.dart: finite bill amounts cannot overflow the total
+00:06 +66: C:/Users/User/bhoardmate/test/payments_screen_test.dart: finite bill amounts cannot overflow the total
+00:07 +67: C:/Users/User/bhoardmate/test/payments_screen_test.dart: finite bill amounts cannot overflow the total
+00:07 +68: C:/Users/User/bhoardmate/test/payments_screen_test.dart: finite bill amounts cannot overflow the total
+00:07 +69: C:/Users/User/bhoardmate/test/rooms_screen_test.dart: editing rent validates and preserves the code and all boarder fields
+00:07 +70: C:/Users/User/bhoardmate/test/rooms_screen_test.dart: editing rent validates and preserves the code and all boarder fields
+00:07 +71: C:/Users/User/bhoardmate/test/rooms_screen_test.dart: editing rent validates and preserves the code and all boarder fields
+00:07 +72: C:/Users/User/bhoardmate/test/rooms_screen_test.dart: editing rent validates and preserves the code and all boarder fields
+00:07 +73: C:/Users/User/bhoardmate/test/main_screen_test.dart: back after more than 2 seconds shows the hint again
+00:08 +74: C:/Users/User/bhoardmate/test/main_screen_test.dart: back after more than 2 seconds shows the hint again
+00:08 +75: C:/Users/User/bhoardmate/test/main_screen_test.dart: back after more than 2 seconds shows the hint again
+00:08 +76: C:/Users/User/bhoardmate/test/main_screen_test.dart: back after more than 2 seconds shows the hint again
+00:08 +77: C:/Users/User/bhoardmate/test/main_screen_test.dart: back after more than 2 seconds shows the hint again
+00:08 +78: C:/Users/User/bhoardmate/test/main_screen_test.dart: back after more than 2 seconds shows the hint again
+00:08 +79: C:/Users/User/bhoardmate/test/main_screen_test.dart: back after more than 2 seconds shows the hint again
+00:08 +80: C:/Users/User/bhoardmate/test/main_screen_test.dart: back after more than 2 seconds shows the hint again
+00:09 +81: C:/Users/User/bhoardmate/test/main_screen_test.dart: back after more than 2 seconds shows the hint again
+00:09 +82: C:/Users/User/bhoardmate/test/main_screen_test.dart: back after more than 2 seconds shows the hint again
+00:09 +83: C:/Users/User/bhoardmate/test/main_screen_test.dart: back after more than 2 seconds shows the hint again
+00:09 +84: C:/Users/User/bhoardmate/test/main_screen_test.dart: back after more than 2 seconds shows the hint again
+00:09 +85: C:/Users/User/bhoardmate/test/main_screen_test.dart: back after more than 2 seconds shows the hint again
+00:10 +86: All tests passed!
