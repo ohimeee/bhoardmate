@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/announcement_provider.dart';
@@ -44,6 +45,31 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   bool _leaving = false;
+  DateTime? _lastBackPress;
+
+  // system back: other tabs go to Home, Home asks twice before exiting
+  void _onBackPressed() {
+    if (_selectedIndex != 0) {
+      _onItemTapped(0);
+      return;
+    }
+    final now = DateTime.now();
+    final last = _lastBackPress;
+    if (last != null && now.difference(last) < const Duration(seconds: 2)) {
+      SystemNavigator.pop();
+      return;
+    }
+    _lastBackPress = now;
+    // hide the old one first so taps don't stack snackbars
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Press back again to exit'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,18 +101,26 @@ class _MainScreenState extends State<MainScreen> {
       const MembersScreen(showOwnProfile: true),
     ];
 
-    return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: screens),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.payments), label: 'Pay'),
-          BottomNavigationBarItem(icon: Icon(Icons.campaign), label: 'News'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Me'),
-        ],
+    // canPop false so back never closes the app by itself
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _onBackPressed();
+      },
+      child: Scaffold(
+        body: IndexedStack(index: _selectedIndex, children: screens),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          type: BottomNavigationBarType.fixed,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.payments), label: 'Pay'),
+            BottomNavigationBarItem(icon: Icon(Icons.campaign), label: 'News'),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Me'),
+          ],
+        ),
       ),
     );
   }
