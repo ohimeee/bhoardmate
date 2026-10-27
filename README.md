@@ -10,7 +10,7 @@ A Flutter app that helps boarding house owners and boarders track rent, split el
 
 <p align="center"><em>Requires Android 7.0 or higher.</em></p>
 
-Download [BHoardMate-v1.0.0.apk](https://github.com/ohimeee/bhoardmate/releases/download/v1.0.0/BHoardMate-v1.0.0.apk) from the [v1.0.0 release](https://github.com/ohimeee/bhoardmate/releases/tag/v1.0.0) and install it on the phone (allow "Install unknown apps" for your browser or file manager). Demo boarder: `BH01-RM2` / `2222`.
+Download [BHoardMate-v1.0.1.apk](https://github.com/ohimeee/bhoardmate/releases/download/v1.0.1/BHoardMate-v1.0.1.apk) from the [v1.0.1 release](https://github.com/ohimeee/bhoardmate/releases/tag/v1.0.1) and install it on the phone (allow "Install unknown apps" for your browser or file manager). Demo boarder: `BH01-RM2` / `2222`.
 
 ## Members
 
