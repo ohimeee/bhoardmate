@@ -193,6 +193,10 @@ app-debug.apk   6999df1bbbc75b507beec52ad1ca5008b65b9e8c36062a4d6667b97b0512d4f6
 app-release.apk f0a20982964094f8a394e5d7d1c1aeb511cf1aa6170a72b373e7111d1589406c
 ```
 
+## Project documentation
+
+The [final project paper (PDF)](docs/paper/SE2142_FinalProject_BJ.pdf), [editable Word document](docs/paper/SE2142_FinalProject_BJ.docx) and [revision notes](docs/paper/README.md) are available for #21. The paper includes the v1.0.1 emulator screenshots and updated build evidence.
+
 ## Credits
 
 BHoardMate uses the [Nager.Date](https://date.nager.at) public holiday API, [Firebase](https://firebase.google.com) (Cloud Firestore and Authentication) and the [Flutter](https://flutter.dev) packages listed above. The Poppins font is from [Google Fonts](https://fonts.google.com/specimen/Poppins).
