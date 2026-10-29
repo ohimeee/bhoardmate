@@ -5,7 +5,7 @@ The revised paper for [#21](https://github.com/ohimeee/bhoardmate/issues/21), up
 - [PDF paper](SE2142_FinalProject_BJ.pdf)
 - [Editable Word document](SE2142_FinalProject_BJ.docx)
 
-This is an AI-assisted evidence and formatting revision of the group's fixed document, for Bryan and Johnmarc to review. Johnmarc remains responsible for reviewing the Technical Implementation section. The source documents are preserved separately.
+Bryan and Johnmarc will review the revised paper. Johnmarc remains responsible for reviewing the Technical Implementation section.
 
 ## v1.0.1 evidence revision
 
