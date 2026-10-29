@@ -1,0 +1,3 @@
+adb shell dumpsys package com.bj.bhoardmate (APK from GitHub release v1.0.1, SHA-256 0fcaeb668c5321474898388c2c2d7eb32db24a6eac2b8c335f77b48e53a40bf9, 55462731 bytes)
+    versionCode=2 minSdk=24 targetSdk=36
+    versionName=1.0.1
